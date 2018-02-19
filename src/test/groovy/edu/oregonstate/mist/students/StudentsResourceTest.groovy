@@ -14,6 +14,9 @@ import static org.junit.Assert.assertNotNull
 class StudentsResourceTest {
     private final URI endpointUri = new URI("https://www.foo.com/")
 
+    /**
+     * Check that not including the term query parameter returns a 400 with an expected message.
+     */
     @Test
     void nullTermShouldReturnBadRequest() {
         StudentsResource studentsResource = new StudentsResource(null, endpointUri)
@@ -21,6 +24,9 @@ class StudentsResourceTest {
                 400, "term (query parameter) is required.")
     }
 
+    /**
+     * Check that the resource returns a 404 if MockDAOWrapper.getPersonID() returns null.
+     */
     @Test
     void badOsuIDShouldReturnNotFound() {
         def mockDAOWrapper = new MockFor(StudentsDAOWrapper)
@@ -29,6 +35,12 @@ class StudentsResourceTest {
         checkErrorResponse(studentsResource.getAcademicStatus("1234", "201801"), 404, null)
     }
 
+    /**
+     * Helper method to check an error response.
+     * @param response
+     * @param expectedResponseCode
+     * @param expectedDeveloperMessage
+     */
     private void checkErrorResponse(Response response,
                                     Integer expectedResponseCode,
                                     String expectedDeveloperMessage) {
@@ -41,6 +53,9 @@ class StudentsResourceTest {
         }
     }
 
+    /**
+     * Check that a good request returns a good response.
+     */
     @Test
     void testValidResponse() {
         def mockDAOWrapper = new MockFor(StudentsDAOWrapper)

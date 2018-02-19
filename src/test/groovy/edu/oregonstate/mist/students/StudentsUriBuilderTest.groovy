@@ -14,6 +14,9 @@ class StudentsUriBuilderTest {
         studentsUriBuilder = new StudentsUriBuilder(endpointUri)
     }
 
+    /**
+     * Check the expected URI structure is returned, given the method arguments.
+     */
     @Test
     void testAcademicStatusUriBuilder() {
         String osuID = "912345678"

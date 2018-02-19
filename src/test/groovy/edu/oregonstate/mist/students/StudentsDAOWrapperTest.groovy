@@ -10,6 +10,9 @@ import static org.junit.Assert.assertNotNull
 import static org.junit.Assert.assertNull
 
 class StudentsDAOWrapperTest {
+    /**
+     * Check that the DAO wrapper returns null if the DAO returns null.
+     */
     @Test
     void personIDShouldBeNullIfDAOReturnsNull() {
         def mockDAO = getMockDAO()
@@ -20,6 +23,9 @@ class StudentsDAOWrapperTest {
         assertNull(mockDAOWrapper.getPersonID("912345678"))
     }
 
+    /**
+     * Test the merging logic of the StudentsDAOWrapper.getAcademicStatus() method.
+     */
     @Test
     void testFullAcademicStatusObject() {
         Integer osuCredits = 12
@@ -51,6 +57,9 @@ class StudentsDAOWrapperTest {
                 mockDAOWrapper.getAcademicStatus("912345678", "201702"))
     }
 
+    /**
+     * Check that if there is no academic standing data, an AcademicStatusObject should be returned.
+     */
     @Test
     void nullAcademicStandingShouldStillReturnSomething() {
         def mockDAO = getMockDAO()

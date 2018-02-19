@@ -30,6 +30,12 @@ class StudentsResource extends Resource {
         this.uriBuilder = new StudentsUriBuilder(endpointUri)
     }
 
+    /**
+     * Get academic status for a student, including enrolled credits and academic standing.
+     * @param osuID
+     * @param term
+     * @return
+     */
     @Timed
     @GET
     @Path ('{id: \\d+}/academicstatus')
