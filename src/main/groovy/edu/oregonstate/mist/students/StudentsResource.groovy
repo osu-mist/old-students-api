@@ -35,7 +35,7 @@ class StudentsResource extends Resource {
     @Path ('{id: \\d+}/academicstatus')
     Response getAcademicStatus(@PathParam("id") String osuID, @QueryParam("term") String term) {
         if (!term?.trim()) {
-            return badRequest("term (query parameter) is required").build()
+            return badRequest("term (query parameter) is required.").build()
         }
 
         String personID = studentsDAOWrapper.getPersonID(osuID)
