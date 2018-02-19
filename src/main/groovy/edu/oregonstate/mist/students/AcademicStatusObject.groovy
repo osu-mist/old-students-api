@@ -1,5 +1,8 @@
 package edu.oregonstate.mist.students
 
+import groovy.transform.EqualsAndHashCode
+
+@EqualsAndHashCode
 class AcademicStatusObject {
     // Number of credit hours currently enrolled at OSU
     Integer osuHours
