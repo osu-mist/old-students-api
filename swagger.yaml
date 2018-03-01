@@ -1,36 +1,80 @@
 swagger: '2.0'
 info:
-  title: Web API Skeleton
-  description: Skeleton for Dropwizard Web APIs
-  version: '0.0'
+  title: Students API
+  description: Get information about students at OSU.
+  version: "1.0.0"
   license:
     name: GNU Affero General Public License Version 3
     url: http://www.gnu.org/licenses/agpl-3.0.en.html
 externalDocs:
   description: GitHub Repository
-  url: https://github.com/osu-mist/web-api-skeleton
-host: localhost
+  url: https://github.com/osu-mist/students-api
 schemes:
-  - http
-basePath: /api/v0
-consumes:
-  - text/plain
+  - https
+basePath: /v1/students
 produces:
-  - text/plain
+  - application/json
 paths:
-  /:
+  /{osuID}/academicstatus:
     get:
-      summary: Get information
-      description: Build and runtime information about the application.
+      description: Get a student's academic status for a given term.
       parameters:
+        - in: query
+          name: term
+          required: true
+          description: "Term code. Example: 201802"
+          type: string
+        - $ref: '#/parameters/osuID'
         - $ref: '#/parameters/pretty'
       responses:
         200:
-          description: Object containing information
+          description: Successful response
           schema:
-            $ref: '#/definitions/Info'
+            $ref: '#/definitions/StatusResultObject'
+        400:
+          description: Bad request
+          schema:
+            $ref: '#/definitions/Error'
+        404:
+          description: Student not found
+          schema:
+            $ref: '#/definitions/Error'
+  # Work study endpoint will be added in CO-1031
+  #/{osuID}/workstudy:
+  #   get:
+  #     description: Get a student's available work study funding for a given date.
+  #     parameters:
+  #       - in: query
+  #         name: date
+  #         required: false
+  #         description: |
+  #           Date to search by (example 2018-12-31).
+  #           If no date is provided, the date will be the current date.
+  #         type: string
+  #         format: date
+  #       - $ref: '#/parameters/osuID'
+  #       - $ref: '#/parameters/pretty'
+  #     responses:
+  #       200:
+  #         description: Successful response
+  #         schema:
+  #           $ref: '#/definitions/WorkStudyResultObject'
+  #       400:
+  #         description: Bad request
+  #         schema:
+  #           $ref: '#/definitions/Error'
+  #       404:
+  #         description: Student not found
+  #         schema:
+  #           $ref: '#/definitions/Error'
 
 parameters:
+  osuID:
+    name: osuID
+    in: path
+    required: true
+    description: OSU ID of person
+    type: string
   pretty:
     name: pretty
     in: query
@@ -39,23 +83,73 @@ parameters:
     description: If true, JSON response will be pretty-printed
 
 definitions:
-  Info:
+  StatusResultObject:
     properties:
-      name:
+      data:
+        properties:
+          id:
+            type: string
+            description: Term code
+            example: "201801"
+          type:
+            type: string
+            example: academicstatus
+          links:
+            $ref: "#/definitions/SelfLink"
+          attributes:
+            properties:
+              osuHours:
+                type: integer
+                example: 15
+                description: Number of credit hours currently enrolled at OSU
+              dualEnrollmentHours:
+                type: integer
+                example: 7
+                description: |
+                  Number of credit hours currently enrolled at an institution 
+                  outside of OSU as part of a dual enrollment program
+              academicStanding:
+                type: string
+                example: Good Standing
+                description: Academic standing
+              registrationBlocked:
+                type: boolean
+                example: false
+                description: If true, the current academic standing prevents registration
+              academicProbation:
+                type: boolean
+                example: false
+                description: If true, the current academic standing indicated academic probation
+  # WorkStudyResultObject:
+  #   properties:
+  #     data:
+  #       properties:
+  #         id:
+  #           type: string
+  #           example: null
+  #         type:
+  #           type: string
+  #           example: workstudy
+  #         links:
+  #           $ref: "#/definitions/SelfLink"
+  #         attributes:
+  #           properties:
+  #             effectiveDate:
+  #               type: string
+  #               format: date
+  #               description: Effective date of work study award.
+  #               example: "2018-12-31"
+  #             remainingAmount:
+  #               type: number
+  #               format: float
+  #               description: Dollar amount remaining for accepted work study award.
+  #               example: 1000.99
+  SelfLink:
+    properties:
+      self:
         type: string
-        description: Name of the API.
-      time:
-        type: string
-        description: Build time in ISO 8601 format.
-      unixTime:
-        type: integer
-        description: Build time as milliseconds since the unix epoch.
-      commit:
-        type: string
-        description: Git commit hash of the revision which was built.
-      documentation:
-        type: string
-        description: Filename of the swagger specification for the API.
+        format: url
+        description: Self link of resource
   Error:
     properties:
       status:
