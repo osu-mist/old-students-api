@@ -152,6 +152,10 @@ definitions:
                     type: number
                     format: float
                     description: Dollar amount of the acceptedAmount that has been paid to the awardee.
+                  awardStatus:
+                    type: string
+                    example: Accepted
+                    description: Status of award.
   SelfLink:
     properties:
       self:

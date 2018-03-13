@@ -1,5 +1,6 @@
 package edu.oregonstate.mist.students
 
+import edu.oregonstate.mist.students.core.AcademicStatusObject
 import edu.oregonstate.mist.students.db.StudentsDAO
 import edu.oregonstate.mist.students.db.StudentsDAOWrapper
 import groovy.mock.interceptor.MockFor
