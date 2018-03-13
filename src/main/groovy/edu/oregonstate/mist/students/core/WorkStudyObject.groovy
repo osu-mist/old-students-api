@@ -15,18 +15,14 @@ class Award {
 
     @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="yyyy-MM-dd")
     Date effectiveEndDate
-
     BigDecimal offerAmount
 
     @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="yyyy-MM-dd")
     Date offerExpirationDate
-
     BigDecimal acceptedAmount
 
     @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="yyyy-MM-dd")
     Date acceptedDate
-
     BigDecimal paidAmount
-
     String awardStatus
 }

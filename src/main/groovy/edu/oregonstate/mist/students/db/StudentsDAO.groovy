@@ -42,6 +42,11 @@ public interface StudentsDAO extends Closeable {
     AcademicStatusObject getAcademicStanding(@Bind("id") String personID,
                                              @Bind("term") String term)
 
+    /**
+     * Get a list of award objects for work study financial aid awards
+     * @param personID
+     * @return
+     */
     @Mapper(AwardMapper)
     @SqlQuery(AbstractStudentsDAO.workStudyQuery)
     List<Award> getWorkStudy(@Bind("id") String personID)

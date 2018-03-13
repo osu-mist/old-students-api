@@ -39,6 +39,11 @@ class StudentsDAOWrapper {
         academicStatus
     }
 
+    /**
+     * Get a workstudy object with work study financial aid awards
+     * @param personID
+     * @return
+     */
     public WorkStudyObject getWorkStudy(String personID) {
         new WorkStudyObject(awards: studentsDAO.getWorkStudy(personID))
     }
