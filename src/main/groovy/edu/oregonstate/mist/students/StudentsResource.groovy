@@ -59,4 +59,28 @@ class StudentsResource extends Resource {
 
         ok(resultObject).build()
     }
+
+    /**
+     * Get work study financial aid award information for a student.
+     * @param osuID
+     * @return
+     */
+    @Timed
+    @GET
+    @Path ('{id: \\d+}/workstudy')
+    Response getWorkStudy(@PathParam("id") String osuID) {
+        String personID = studentsDAOWrapper.getPersonID(osuID)
+
+        if (!personID) {
+            return notFound().build()
+        }
+
+        ResultObject resultObject = new ResultObject(data: new ResourceObject(
+                type: "workstudy",
+                attributes: studentsDAOWrapper.getWorkStudy(personID),
+                links: ["self": uriBuilder.workStudyUri(osuID)]
+        ))
+
+        ok(resultObject).build()
+    }
 }

@@ -1,4 +1,4 @@
-package edu.oregonstate.mist.students
+package edu.oregonstate.mist.students.core
 
 import groovy.transform.EqualsAndHashCode
 

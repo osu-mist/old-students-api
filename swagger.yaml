@@ -39,34 +39,21 @@ paths:
           description: Student not found
           schema:
             $ref: '#/definitions/Error'
-  # Work study endpoint will be added in CO-1031
-  #/{osuID}/workstudy:
-  #   get:
-  #     description: Get a student's available work study funding for a given date.
-  #     parameters:
-  #       - in: query
-  #         name: date
-  #         required: false
-  #         description: |
-  #           Date to search by (example 2018-12-31).
-  #           If no date is provided, the date will be the current date.
-  #         type: string
-  #         format: date
-  #       - $ref: '#/parameters/osuID'
-  #       - $ref: '#/parameters/pretty'
-  #     responses:
-  #       200:
-  #         description: Successful response
-  #         schema:
-  #           $ref: '#/definitions/WorkStudyResultObject'
-  #       400:
-  #         description: Bad request
-  #         schema:
-  #           $ref: '#/definitions/Error'
-  #       404:
-  #         description: Student not found
-  #         schema:
-  #           $ref: '#/definitions/Error'
+  /{osuID}/workstudy:
+    get:
+      description: Get a student's available work study funding for a given date.
+      parameters:
+        - $ref: '#/parameters/osuID'
+        - $ref: '#/parameters/pretty'
+      responses:
+        200:
+          description: Successful response
+          schema:
+            $ref: '#/definitions/WorkStudyResultObject'
+        404:
+          description: Student not found
+          schema:
+            $ref: '#/definitions/Error'
 
 parameters:
   osuID:
@@ -120,30 +107,55 @@ definitions:
                 type: boolean
                 example: false
                 description: If true, the current academic standing indicated academic probation
-  # WorkStudyResultObject:
-  #   properties:
-  #     data:
-  #       properties:
-  #         id:
-  #           type: string
-  #           example: null
-  #         type:
-  #           type: string
-  #           example: workstudy
-  #         links:
-  #           $ref: "#/definitions/SelfLink"
-  #         attributes:
-  #           properties:
-  #             effectiveDate:
-  #               type: string
-  #               format: date
-  #               description: Effective date of work study award.
-  #               example: "2018-12-31"
-  #             remainingAmount:
-  #               type: number
-  #               format: float
-  #               description: Dollar amount remaining for accepted work study award.
-  #               example: 1000.99
+  WorkStudyResultObject:
+    properties:
+      data:
+        properties:
+          id:
+            type: string
+            example: null
+          type:
+            type: string
+            example: workstudy
+          links:
+            $ref: "#/definitions/SelfLink"
+          attributes:
+            properties:
+              awards:
+                type: array
+                properties:
+                  effectiveStartDate:
+                    type: string
+                    format: date
+                    description: Date the award is effective.
+                  effectiveEndDate:
+                    type: string
+                    format: date
+                    description: Date the award is no longer effective.
+                  offerAmount:
+                    type: number
+                    format: float
+                    description: Dollar amount offered for the award.
+                  offerExpirationDate:
+                    type: string
+                    format: date
+                    description: Expiration date of offer.
+                  acceptedAmount:
+                    type: number
+                    format: float
+                    description: Dollar amount accepted by awardee.
+                  acceptedDate:
+                    type: string
+                    format: date
+                    description: Date the offer was accepted by the awardee.
+                  paidAmount:
+                    type: number
+                    format: float
+                    description: Dollar amount of the acceptedAmount that has been paid to the awardee.
+                  awardStatus:
+                    type: string
+                    example: Accepted
+                    description: Status of award.
   SelfLink:
     properties:
       self:

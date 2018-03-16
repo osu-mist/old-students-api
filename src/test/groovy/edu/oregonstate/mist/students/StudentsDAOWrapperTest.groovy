@@ -1,5 +1,8 @@
 package edu.oregonstate.mist.students
 
+import edu.oregonstate.mist.students.core.AcademicStatusObject
+import edu.oregonstate.mist.students.core.Award
+import edu.oregonstate.mist.students.core.WorkStudyObject
 import edu.oregonstate.mist.students.db.StudentsDAO
 import edu.oregonstate.mist.students.db.StudentsDAOWrapper
 import groovy.mock.interceptor.MockFor
@@ -78,6 +81,30 @@ class StudentsDAOWrapperTest {
         assertNull(academicStatus.academicStanding)
         assertNull(academicStatus.registrationBlocked)
         assertNull(academicStatus.academicProbation)
+    }
+
+    /**
+     * Check that a correct workstudy object is returned from the DAO wrapper
+     */
+    @Test
+    void getWorkStudyTest() {
+        List<Award> awards = [new Award(
+                effectiveStartDate: new Date(),
+                effectiveEndDate: new Date(),
+                offerAmount: 2000,
+                offerExpirationDate: new Date(),
+                acceptedAmount: 1500,
+                acceptedDate: new Date(),
+                paidAmount: 1000,
+                awardStatus: "Accepted"
+        )]
+
+        def mockDAO = getMockDAO()
+        mockDAO.demand.getWorkStudy() { awards }
+        def mockDAOWrapper = new StudentsDAOWrapper(mockDAO.proxyInstance())
+        WorkStudyObject workStudy = mockDAOWrapper.getWorkStudy("987654321")
+
+        assertEquals(workStudy.awards, awards)
     }
 
     private MockFor getMockDAO() {

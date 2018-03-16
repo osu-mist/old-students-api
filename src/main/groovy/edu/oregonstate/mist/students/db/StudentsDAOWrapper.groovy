@@ -1,6 +1,7 @@
 package edu.oregonstate.mist.students.db
 
-import edu.oregonstate.mist.students.AcademicStatusObject
+import edu.oregonstate.mist.students.core.AcademicStatusObject
+import edu.oregonstate.mist.students.core.WorkStudyObject
 
 class StudentsDAOWrapper {
     private final StudentsDAO studentsDAO
@@ -36,5 +37,14 @@ class StudentsDAOWrapper {
                 term)
 
         academicStatus
+    }
+
+    /**
+     * Get a workstudy object with work study financial aid awards
+     * @param personID
+     * @return
+     */
+    public WorkStudyObject getWorkStudy(String personID) {
+        new WorkStudyObject(awards: studentsDAO.getWorkStudy(personID))
     }
 }
