@@ -99,6 +99,17 @@ definitions:
                 type: string
                 example: Good Standing
                 description: Academic standing
+                enum:
+                  - "Good Standing"
+                  - "Academic Dismissal - Graduate"
+                  - "Continued Deferred Suspension"
+                  - "**** HONOR ROLL ****"
+                  - "Academic Probation"
+                  - "Special Deferred Suspension"
+                  - "Academic Suspension"
+                  - "Deferred Suspension"
+                  - "Academic Warning"
+                  - "Reinstatement after Suspension"
               registrationBlocked:
                 type: boolean
                 example: false
@@ -123,39 +134,52 @@ definitions:
             properties:
               awards:
                 type: array
-                properties:
-                  effectiveStartDate:
-                    type: string
-                    format: date
-                    description: Date the award is effective.
-                  effectiveEndDate:
-                    type: string
-                    format: date
-                    description: Date the award is no longer effective.
-                  offerAmount:
-                    type: number
-                    format: float
-                    description: Dollar amount offered for the award.
-                  offerExpirationDate:
-                    type: string
-                    format: date
-                    description: Expiration date of offer.
-                  acceptedAmount:
-                    type: number
-                    format: float
-                    description: Dollar amount accepted by awardee.
-                  acceptedDate:
-                    type: string
-                    format: date
-                    description: Date the offer was accepted by the awardee.
-                  paidAmount:
-                    type: number
-                    format: float
-                    description: Dollar amount of the acceptedAmount that has been paid to the awardee.
-                  awardStatus:
-                    type: string
-                    example: Accepted
-                    description: Status of award.
+                items:
+                  properties:
+                    effectiveStartDate:
+                      type: string
+                      format: date
+                      description: Date the award is effective.
+                    effectiveEndDate:
+                      type: string
+                      format: date
+                      description: Date the award is no longer effective.
+                    offerAmount:
+                      type: number
+                      format: float
+                      description: Dollar amount offered for the award.
+                    offerExpirationDate:
+                      type: string
+                      format: date
+                      description: Expiration date of offer.
+                    acceptedAmount:
+                      type: number
+                      format: float
+                      description: Dollar amount accepted by awardee.
+                    acceptedDate:
+                      type: string
+                      format: date
+                      description: Date the offer was accepted by the awardee.
+                    paidAmount:
+                      type: number
+                      format: float
+                      description: Dollar amount of the acceptedAmount that has been paid to the awardee.
+                    awardStatus:
+                      type: string
+                      example: Accepted
+                      description: Status of award.
+                      enum:
+                        - "Declined"
+                        - "Offered"
+                        - "System Accepted"
+                        - "System Cancelled"
+                        - "Estimated Auto Accept"
+                        - "Estimated"
+                        - "Recommended"
+                        - "Accepted"
+                        - "Certified"
+                        - "System Offered"
+                        - "Canceled"
   SelfLink:
     properties:
       self:
