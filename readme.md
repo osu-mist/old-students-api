@@ -1,6 +1,6 @@
-# Web API Skeleton
+# Students API
 
-Skeleton for Dropwizard Web APIs.
+API to get student data.
 
 ### Generate Keys
 
