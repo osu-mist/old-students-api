@@ -10,7 +10,7 @@ import java.sql.SQLException
 public class AcademicStandingMapper implements ResultSetMapper<AcademicStatusObject> {
     public AcademicStatusObject map(int i, ResultSet rs, StatementContext sc) throws SQLException {
         new AcademicStatusObject(
-                academicStanding: rs.getString("academic_standing"),
+                academicStanding: rs.getString("academic_standing").replace('*', '').trim(),
                 academicProbation: rs.getString("academic_probation_ind") == "Y",
                 registrationBlocked: rs.getString("blocks_registration_ind") == "Y"
         )
