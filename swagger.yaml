@@ -103,13 +103,13 @@ definitions:
                   - "Good Standing"
                   - "Academic Dismissal - Graduate"
                   - "Continued Deferred Suspension"
-                  - "**** HONOR ROLL ****"
+                  - "Honor Roll"
                   - "Academic Probation"
                   - "Special Deferred Suspension"
                   - "Academic Suspension"
                   - "Deferred Suspension"
                   - "Academic Warning"
-                  - "Reinstatement after Suspension"
+                  - "Reinstatement After Suspension"
               registrationBlocked:
                 type: boolean
                 example: false
