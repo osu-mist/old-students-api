@@ -83,4 +83,29 @@ class StudentsResource extends Resource {
 
         ok(resultObject).build()
     }
+
+    @Timed
+    @GET
+    @Path ('{id: \\d+}/schedule')
+    Response getSchedule(@PathParam("id") String osuID,
+                         @QueryParam("term") String term) {
+        String personID = studentsDAOWrapper.getPersonID(osuID)
+
+        if (!personID) {
+            return notFound().build()
+        }
+
+        if (!term) {
+            return badRequest("term is a required query parameter").build()
+        }
+
+        ResultObject resultObject = new ResultObject(data: new ResourceObject(
+                type: "schedule",
+                attributes: studentsDAOWrapper.getSchedule(personID, term)
+                //links: ["self": uriBuilder.workStudyUri(osuID)]
+        ))
+
+        ok(resultObject).build()
+    }
+
 }

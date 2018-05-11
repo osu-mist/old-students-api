@@ -1,6 +1,8 @@
 package edu.oregonstate.mist.students.db
 
 import edu.oregonstate.mist.students.core.AcademicStatusObject
+import edu.oregonstate.mist.students.core.Course
+import edu.oregonstate.mist.students.core.Schedule
 import edu.oregonstate.mist.students.core.WorkStudyObject
 
 class StudentsDAOWrapper {
@@ -46,5 +48,11 @@ class StudentsDAOWrapper {
      */
     public WorkStudyObject getWorkStudy(String personID) {
         new WorkStudyObject(awards: studentsDAO.getWorkStudy(personID))
+    }
+
+    public Schedule getSchedule(String personID, String term) {
+        List<Course> courses = studentsDAO.getCourses(personID, term)
+
+        new Schedule(courses: courses)
     }
 }
