@@ -100,6 +100,7 @@ class StudentsResource extends Resource {
         }
 
         ResultObject resultObject = new ResultObject(data: new ResourceObject(
+                id: term,
                 type: "schedule",
                 attributes: studentsDAOWrapper.getSchedule(personID, term)
                 //links: ["self": uriBuilder.workStudyUri(osuID)]

@@ -4,6 +4,7 @@ import edu.oregonstate.mist.students.core.AcademicStatusObject
 import edu.oregonstate.mist.students.core.Course
 import edu.oregonstate.mist.students.core.Schedule
 import edu.oregonstate.mist.students.core.WorkStudyObject
+import edu.oregonstate.mist.students.mapper.CourseMapper
 
 class StudentsDAOWrapper {
     private final StudentsDAO studentsDAO
@@ -52,6 +53,10 @@ class StudentsDAOWrapper {
 
     public Schedule getSchedule(String personID, String term) {
         List<Course> courses = studentsDAO.getCourses(personID, term)
+
+        courses.each {
+            it.meetingTimes = studentsDAO.getMeetingTimes(term, it.courseID)
+        }
 
         new Schedule(courses: courses)
     }

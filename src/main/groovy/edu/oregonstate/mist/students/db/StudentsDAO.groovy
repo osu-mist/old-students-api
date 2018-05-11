@@ -4,9 +4,11 @@ import edu.oregonstate.mist.contrib.AbstractStudentsDAO
 import edu.oregonstate.mist.students.core.AcademicStatusObject
 import edu.oregonstate.mist.students.core.Award
 import edu.oregonstate.mist.students.core.Course
+import edu.oregonstate.mist.students.core.MeetingTime
 import edu.oregonstate.mist.students.mapper.AcademicStandingMapper
 import edu.oregonstate.mist.students.mapper.AwardMapper
 import edu.oregonstate.mist.students.mapper.CourseMapper
+import edu.oregonstate.mist.students.mapper.MeetingTimeMapper
 import org.skife.jdbi.v2.sqlobject.Bind
 import org.skife.jdbi.v2.sqlobject.SqlQuery
 import org.skife.jdbi.v2.sqlobject.customizers.Mapper
@@ -55,8 +57,13 @@ public interface StudentsDAO extends Closeable {
 
     @Mapper(CourseMapper)
     @SqlQuery(AbstractStudentsDAO.courseQuery)
-    List<Course>  getCourses(@Bind("id") String personID,
-                             @Bind("term") String term)
+    List<Course> getCourses(@Bind("id") String personID,
+                            @Bind("term") String term)
+
+    @Mapper(MeetingTimeMapper)
+    @SqlQuery(AbstractStudentsDAO.meetingTimeQuery)
+    List<MeetingTime> getMeetingTimes(@Bind("term") String term,
+                                      @Bind("courseID") String courseID)
 
     /**
      * Return an internal ID given an OSU ID. Also validates that a person exists.
