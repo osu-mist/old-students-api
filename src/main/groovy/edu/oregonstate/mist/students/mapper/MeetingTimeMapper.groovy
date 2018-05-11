@@ -32,9 +32,13 @@ public class MeetingTimeMapper implements ResultSetMapper<MeetingTime> {
     }
 
     private LocalTime parseTime(String unparsedTime) {
-        Integer hour = Integer.parseInt(unparsedTime.substring(0,2))
-        Integer minutes = Integer.parseInt(unparsedTime.substring(2))
+        if (!unparsedTime) {
+            null
+        } else {
+            Integer hour = Integer.parseInt(unparsedTime.substring(0,2))
+            Integer minutes = Integer.parseInt(unparsedTime.substring(2))
 
-        LocalTime.of(hour, minutes)
+            LocalTime.of(hour, minutes)
+        }
     }
 }
