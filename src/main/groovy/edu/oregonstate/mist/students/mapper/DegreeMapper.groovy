@@ -19,7 +19,9 @@ public class DegreeMapper implements ResultSetMapper<Degree> {
                 collegeDescription: rs.getString("COLLEGE_DESC"),
                 graduated: rs.getString("GRADUATED_IND") == "Y",
                 campusDescription: rs.getString("CAMPUS_DESC"),
-                gpa: getGpa(rs.getBigDecimal("GPA"))
+                gpa: getGpa(rs.getBigDecimal("GPA")),
+                applicationDate: rs.getDate("OUTCOME_APPLICATION_DATE"),
+                graduationDate: rs.getDate("OUTCOME_GRADUATION_DATE")
         )
     }
 

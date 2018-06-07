@@ -133,6 +133,14 @@ definitions:
                       format: float
                       description: Overall GPA
                       example: 3.5
+                    applicationDate:
+                      type: string
+                      format: date
+                      description: Date the student applied for the degree
+                    graduationDate:
+                      type: string
+                      format: date
+                      description: Date the student graduated from the dgree
           links:
             $ref: "#/definitions/SelfLink"
   StatusResultObject:
