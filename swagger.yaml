@@ -140,7 +140,7 @@ definitions:
                     graduationDate:
                       type: string
                       format: date
-                      description: Date the student graduated from the dgree
+                      description: Date the degree was or will be awarded to the student
           links:
             $ref: "#/definitions/SelfLink"
   StatusResultObject:
