@@ -15,6 +15,6 @@ class Degree {
     Boolean graduated
     String campusDescription
     BigDecimal gpa
-    Date applicationDate
+    Date graduationApplicationDate
     Date graduationDate
 }

@@ -133,10 +133,10 @@ definitions:
                       format: float
                       description: Overall GPA
                       example: 3.5
-                    applicationDate:
+                    graduationApplicationDate:
                       type: string
                       format: date
-                      description: Date the student applied for the degree
+                      description: Date the student applied for graduation for the degree
                     graduationDate:
                       type: string
                       format: date
