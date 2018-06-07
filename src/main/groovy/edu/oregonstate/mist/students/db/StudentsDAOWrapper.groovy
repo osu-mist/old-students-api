@@ -2,7 +2,9 @@ package edu.oregonstate.mist.students.db
 
 import edu.oregonstate.mist.students.core.AcademicStatusObject
 import edu.oregonstate.mist.students.core.Course
+import edu.oregonstate.mist.students.core.Degree
 import edu.oregonstate.mist.students.core.Schedule
+import edu.oregonstate.mist.students.core.StudentObject
 import edu.oregonstate.mist.students.core.WorkStudyObject
 import edu.oregonstate.mist.students.mapper.CourseMapper
 
@@ -59,5 +61,11 @@ class StudentsDAOWrapper {
         }
 
         new Schedule(courses: courses)
+    }
+
+    public StudentObject getStudentObject(String osuID) {
+        List<Degree> degrees = studentsDAO.getDegrees(osuID)
+
+        new StudentObject(degrees: degrees)
     }
 }

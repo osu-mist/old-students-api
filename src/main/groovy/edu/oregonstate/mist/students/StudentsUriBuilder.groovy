@@ -21,4 +21,11 @@ class StudentsUriBuilder {
                 .path("students/{osuID}/workstudy")
                 .build(osuID)
     }
+
+    URI scheduleUri(String osuID, String term) {
+        UriBuilder.fromUri(this.endpointUri)
+                .path("students/{osuID}/schedule")
+                .queryParam("term", term)
+                .build(osuID)
+    }
 }

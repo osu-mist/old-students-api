@@ -15,6 +15,20 @@ basePath: /v1/students
 produces:
   - application/json
 paths:
+  /{osuID}:
+    get:
+      description: Get general student information
+      parameters:
+        - $ref: '#/parameters/osuID'
+      responses:
+        200:
+          description: Successful response
+          schema:
+            $ref: '#/definitions/StudentResultObject'
+        404:
+          description: Student not found
+          schema:
+            $ref: '#/definitions/Error'
   /{osuID}/academicstatus:
     get:
       description: Get a student's academic status for a given term.
@@ -70,6 +84,57 @@ parameters:
     description: If true, JSON response will be pretty-printed
 
 definitions:
+  StudentResultObject:
+    properties:
+      data:
+        properties:
+          id:
+            type: string
+            description: 9 digit OSU ID
+            example: 931234567
+          type:
+            type: string
+            example: students
+          attributes:
+            properties:
+              degrees:
+                type: array
+                items:
+                  properties:
+                    degree:
+                      type: string
+                      example: BS
+                    degreeDescription:
+                      type: string
+                      example: Bachelor of Science
+                    degreeCategoryDescription:
+                      type: string
+                      example: Baccalaureate Degree
+                    status:
+                      type: string
+                      description: Degree status
+                      example: Baccalaureate awarded
+                    majorDescription:
+                      type: string
+                      example: Business Administration
+                    levelDescription:
+                      type: string
+                      example: Undergraduate
+                    collegeDescription:
+                      type: string
+                      example: College of Business
+                    graduated:
+                      type: boolean
+                      example: false
+                    campusDescription:
+                      type: string
+                    gpa:
+                      type: number
+                      format: float
+                      description: Overall GPA
+                      example: 3.5
+          links:
+            $ref: "#/definitions/SelfLink"
   StatusResultObject:
     properties:
       data:

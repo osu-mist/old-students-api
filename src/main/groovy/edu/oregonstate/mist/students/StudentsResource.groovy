@@ -4,6 +4,7 @@ import com.codahale.metrics.annotation.Timed
 import edu.oregonstate.mist.api.Resource
 import edu.oregonstate.mist.api.jsonapi.ResourceObject
 import edu.oregonstate.mist.api.jsonapi.ResultObject
+import edu.oregonstate.mist.students.core.StudentObject
 import edu.oregonstate.mist.students.db.StudentsDAOWrapper
 import groovy.transform.TypeChecked
 
@@ -102,9 +103,28 @@ class StudentsResource extends Resource {
         ResultObject resultObject = new ResultObject(data: new ResourceObject(
                 id: term,
                 type: "schedule",
-                attributes: studentsDAOWrapper.getSchedule(personID, term)
-                //links: ["self": uriBuilder.workStudyUri(osuID)]
+                attributes: studentsDAOWrapper.getSchedule(personID, term),
+                links: ["self": uriBuilder.scheduleUri(osuID, term)]
         ))
+
+        ok(resultObject).build()
+    }
+
+    @Timed
+    @GET
+    @Path ('{id: \\d+}')
+    Response getStudent(@PathParam("id") String osuID) {
+        if (!studentsDAOWrapper.getPersonID(osuID)) {
+            return notFound().build()
+        }
+
+        ResultObject resultObject = new ResultObject(
+                data: new ResourceObject(
+                        id: osuID,
+                        type: "students",
+                        attributes: studentsDAOWrapper.getStudentObject(osuID)
+                )
+        )
 
         ok(resultObject).build()
     }
