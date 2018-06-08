@@ -17,7 +17,13 @@ public class CourseMapper implements ResultSetMapper<Course> {
                 courseNumber: rs.getString("COURSE_NUMBER"),
                 courseSection: rs.getString("COURSE_SECTION_NUMBER"),
                 courseStartDate: rs.getDate("START_DATE"),
-                courseEndDate: rs.getDate("END_DATE")
+                courseEndDate: rs.getDate("END_DATE"),
+                finalLetterGrade: rs.getString("FINAL_GRADE"),
+                finalGrade: getFinalGrade(rs.getInt("GRADE_VALUE"))
         )
+    }
+
+    private static Integer getFinalGrade(Integer finalGrade) {
+        (finalGrade == 0) ? null : finalGrade
     }
 }

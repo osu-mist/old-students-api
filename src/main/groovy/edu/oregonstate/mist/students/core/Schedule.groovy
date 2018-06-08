@@ -15,6 +15,8 @@ class Course {
     String courseSubject
     String courseNumber
     String courseSection
+    String finalLetterGrade
+    Integer finalGrade
 
     @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="yyyy-MM-dd")
     Date courseStartDate
