@@ -77,7 +77,7 @@ public interface StudentsDAO extends Closeable {
 
     @Mapper(DegreeMapper)
     @SqlQuery(AbstractStudentsDAO.degreesQuery)
-    List<Degree> getDegrees(@Bind("osuID") String osuID)
+    List<Degree> getDegrees(@Bind("id") String personID)
 
     @Override
     void close()

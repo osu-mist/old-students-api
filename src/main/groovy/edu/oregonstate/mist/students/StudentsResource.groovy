@@ -114,7 +114,9 @@ class StudentsResource extends Resource {
     @GET
     @Path ('{id: \\d+}')
     Response getStudent(@PathParam("id") String osuID) {
-        if (!studentsDAOWrapper.getPersonID(osuID)) {
+        String personID = studentsDAOWrapper.getPersonID(osuID)
+
+        if (!personID) {
             return notFound().build()
         }
 
@@ -122,7 +124,7 @@ class StudentsResource extends Resource {
                 data: new ResourceObject(
                         id: osuID,
                         type: "students",
-                        attributes: studentsDAOWrapper.getStudentObject(osuID)
+                        attributes: studentsDAOWrapper.getStudentObject(personID)
                 )
         )
 

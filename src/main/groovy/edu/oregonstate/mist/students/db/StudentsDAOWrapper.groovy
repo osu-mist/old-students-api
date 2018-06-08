@@ -63,8 +63,8 @@ class StudentsDAOWrapper {
         new Schedule(courses: courses)
     }
 
-    public StudentObject getStudentObject(String osuID) {
-        List<Degree> degrees = studentsDAO.getDegrees(osuID)
+    public StudentObject getStudentObject(String personID) {
+        List<Degree> degrees = studentsDAO.getDegrees(personID)
 
         new StudentObject(degrees: degrees)
     }
