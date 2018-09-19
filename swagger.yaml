@@ -11,17 +11,18 @@ externalDocs:
   url: https://github.com/osu-mist/students-api
 schemes:
   - https
+host: api.oregonstate.edu
 basePath: /v1/students
 produces:
   - application/json
 paths:
-  /{osuID}/academicstatus:
+  /{osuID}/academic-status:
     get:
-      description: Get a student's academic status for a given term.
+      description: Get terms a student was registered for
       parameters:
         - in: query
           name: term
-          required: true
+          required: false
           description: "Term code. Example: 201802"
           type: string
         - $ref: '#/parameters/osuID'
@@ -30,7 +31,7 @@ paths:
         200:
           description: Successful response
           schema:
-            $ref: '#/definitions/StatusResultObject'
+            $ref: '#/definitions/AcademicStatusResultObject'
         400:
           description: Bad request
           schema:
@@ -39,9 +40,9 @@ paths:
           description: Student not found
           schema:
             $ref: '#/definitions/Error'
-  /{osuID}/workstudy:
+  /{osuID}/work-study:
     get:
-      description: Get a student's available work study funding for a given date.
+      description: Get a student's work study financial aid awards.
       parameters:
         - $ref: '#/parameters/osuID'
         - $ref: '#/parameters/pretty'
@@ -50,6 +51,26 @@ paths:
           description: Successful response
           schema:
             $ref: '#/definitions/WorkStudyResultObject'
+        404:
+          description: Student not found
+          schema:
+            $ref: '#/definitions/Error'
+  /{osuID}/final-grades:
+    get:
+      description: Get a student's final grades for their classes.
+      parameters:
+        - in: query
+          name: term
+          required: false
+          description: "Term code. Example: 201802"
+          type: string
+        - $ref: '#/parameters/osuID'
+        - $ref: '#/parameters/pretty'
+      responses:
+        200:
+          description: Successful response
+          schema:
+            $ref: '#/definitions/FinalGradesResultObject'
         404:
           description: Student not found
           schema:
@@ -70,122 +91,160 @@ parameters:
     description: If true, JSON response will be pretty-printed
 
 definitions:
-  StatusResultObject:
+  AcademicStatusResultObject:
     properties:
       data:
-        properties:
-          id:
-            type: string
-            description: Term code
-            example: "201801"
-          type:
-            type: string
-            example: academicstatus
-          links:
-            $ref: "#/definitions/SelfLink"
-          attributes:
-            properties:
-              osuHours:
-                type: integer
-                example: 15
-                description: Number of credit hours currently enrolled at OSU
-              dualEnrollmentHours:
-                type: integer
-                example: 7
-                description: |
-                  Number of credit hours currently enrolled at an institution 
-                  outside of OSU as part of a dual enrollment program
-              academicStanding:
-                type: string
-                example: Good Standing
-                description: Academic standing
-                enum:
-                  - "Good Standing"
-                  - "Academic Dismissal - Graduate"
-                  - "Continued Deferred Suspension"
-                  - "Honor Roll"
-                  - "Academic Probation"
-                  - "Special Deferred Suspension"
-                  - "Academic Suspension"
-                  - "Deferred Suspension"
-                  - "Academic Warning"
-                  - "Reinstatement After Suspension"
-              registrationBlocked:
-                type: boolean
-                example: false
-                description: If true, the current academic standing prevents registration
-              academicProbation:
-                type: boolean
-                example: false
-                description: If true, the current academic standing indicated academic probation
+        type: array
+        items:
+          properties:
+            id:
+              type: string
+              description: Globally unique identifier for academic status for the given term
+              example: "2da427e7-4731-41a9-8f8f-221903123b98"
+            type:
+              type: string
+              example: "academic-status"
+            links:
+              $ref: "#/definitions/SelfLink"
+            attributes:
+              properties:
+                term:
+                  type: integer
+                  example: 201901
+                  description: Academic term related to academic status record
+                osuHours:
+                  type: integer
+                  example: 15
+                  description: Number of credit hours currently enrolled at OSU
+                dualEnrollmentHours:
+                  type: integer
+                  example: 7
+                  description: |
+                    Number of credit hours currently enrolled at an institution 
+                    outside of OSU as part of a dual enrollment program
+                academicStanding:
+                  type: string
+                  example: Good Standing
+                  description: Academic standing
+                  enum:
+                    - "Good Standing"
+                    - "Academic Dismissal - Graduate"
+                    - "Continued Deferred Suspension"
+                    - "Honor Roll"
+                    - "Academic Probation"
+                    - "Special Deferred Suspension"
+                    - "Academic Suspension"
+                    - "Deferred Suspension"
+                    - "Academic Warning"
+                    - "Reinstatement After Suspension"
+                registrationBlocked:
+                  type: boolean
+                  example: false
+                  description: If true, the current academic standing prevents registration
+                academicProbation:
+                  type: boolean
+                  example: false
+                  description: If true, the current academic standing indicated academic probation
   WorkStudyResultObject:
     properties:
       data:
-        properties:
-          id:
-            type: string
-            example: null
-          type:
-            type: string
-            example: workstudy
-          links:
-            $ref: "#/definitions/SelfLink"
-          attributes:
-            properties:
-              awards:
-                type: array
-                items:
-                  properties:
-                    effectiveStartDate:
-                      type: string
-                      format: date
-                      description: Date the award is effective.
-                    effectiveEndDate:
-                      type: string
-                      format: date
-                      description: Date the award is no longer effective.
-                    offerAmount:
-                      type: number
-                      format: float
-                      description: Dollar amount offered for the award.
-                    offerExpirationDate:
-                      type: string
-                      format: date
-                      description: Expiration date of offer.
-                    acceptedAmount:
-                      type: number
-                      format: float
-                      description: Dollar amount accepted by awardee.
-                    acceptedDate:
-                      type: string
-                      format: date
-                      description: Date the offer was accepted by the awardee.
-                    paidAmount:
-                      type: number
-                      format: float
-                      description: Dollar amount of the acceptedAmount that has been paid to the awardee.
-                    awardStatus:
-                      type: string
-                      example: Accepted
-                      description: Status of award.
-                      enum:
-                        - "Declined"
-                        - "Offered"
-                        - "System Accepted"
-                        - "System Cancelled"
-                        - "Estimated Auto Accept"
-                        - "Estimated"
-                        - "Recommended"
-                        - "Accepted"
-                        - "Certified"
-                        - "System Offered"
-                        - "Canceled"
+        type: array
+        items:
+          properties:
+            id:
+              type: string
+              example: "671c638c-734b-4f2f-ae03-9073463a8c83"
+              description: Globally unique identifier for work study award.
+            type:
+              type: string
+              example: "work-study"
+            links:
+              $ref: "#/definitions/SelfLink"
+            attributes:
+              properties:
+                effectiveStartDate:
+                  type: string
+                  format: date
+                  description: Date the award is effective.
+                effectiveEndDate:
+                  type: string
+                  format: date
+                  description: Date the award is no longer effective.
+                offerAmount:
+                  type: number
+                  format: float
+                  description: Dollar amount offered for the award.
+                offerExpirationDate:
+                  type: string
+                  format: date
+                  description: Expiration date of offer.
+                acceptedAmount:
+                  type: number
+                  format: float
+                  description: Dollar amount accepted by awardee.
+                acceptedDate:
+                  type: string
+                  format: date
+                  description: Date the offer was accepted by the awardee.
+                paidAmount:
+                  type: number
+                  format: float
+                  description: Dollar amount of the acceptedAmount that has been paid to the awardee.
+                awardStatus:
+                  type: string
+                  example: Accepted
+                  description: Status of award.
+                  enum:
+                    - "Declined"
+                    - "Offered"
+                    - "System Accepted"
+                    - "System Cancelled"
+                    - "Estimated Auto Accept"
+                    - "Estimated"
+                    - "Recommended"
+                    - "Accepted"
+                    - "Certified"
+                    - "System Offered"
+                    - "Canceled"
+  FinalGradesResultObject:
+    properties:
+      data:
+        type: array
+        items:
+          properties:
+            id:
+              type: string
+              example: "201901"
+              description: Term ID
+            type:
+              type: string
+              example: "final-grades"
+            links:
+              $ref: "#/definitions/SelfLink"
+            attributes:
+              properties:
+                courses:
+                  type: array
+                  items:
+                    properties:
+                      courseReferenceNumber:
+                        description: Uniquely identifies a course section for a given term.
+                        type: string
+                        example: "123456"
+                      finalGrade:
+                        description: Letter grade representing the student's final grade for the course.
+                        type: string
+                        example: "A-"
+                      finalGradeValue:
+                        description: Integer representation of finalGrade.
+                        type: integer
   SelfLink:
     properties:
       self:
         type: string
         format: url
-        description: Self link of resource
+        example: null
+        description: Self link of resource, currently null.
   Error:
     properties:
       status:
