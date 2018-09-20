@@ -16,6 +16,36 @@ basePath: /v1/students
 produces:
   - application/json
 paths:
+  /{osuID}/account-balance:
+    get:
+      description: Get a student's account balance.
+      parameters:
+        - $ref: '#/parameters/osuID'
+        - $ref: '#/parameters/pretty'
+      responses:
+        200:
+          description: Successful response
+          schema:
+            $ref: '#/definitions/AccountBalanceResultObject'
+        400:
+          description: Bad request
+          schema:
+            $ref: '#/definitions/Error'
+  /{osuID}/account-transactions:
+    get:
+      description: Get a student's history of account transactions.
+      parameters:
+        - $ref: '#/parameters/osuID'
+        - $ref: '#/parameters/pretty'
+      responses:
+        200:
+          description: Successful response
+          schema:
+            $ref: '#/definitions/AccountTransactionsResultObject'
+        400:
+          description: Bad request
+          schema:
+            $ref: '#/definitions/Error'
   /{osuID}/academic-status:
     get:
       description: Get terms a student was registered for
@@ -55,7 +85,7 @@ paths:
           description: Student not found
           schema:
             $ref: '#/definitions/Error'
-  /{osuID}/final-grades:
+  /{osuID}/grades:
     get:
       description: Get a student's final grades for their classes.
       parameters:
@@ -91,6 +121,59 @@ parameters:
     description: If true, JSON response will be pretty-printed
 
 definitions:
+  AccountBalanceResultObject:
+    properties:
+      data:
+        properties:
+          id:
+            type: string
+            description: Currently null
+            example: null
+          type:
+            type: string
+            example: "account-balance"
+          attributes:
+            properties:
+              balance:
+                type: number
+                format: float
+                description: Current balance of student's account, in USD.
+                example: 2500.39
+  AccountTransactionsResultObject:
+    properties:
+      data:
+        properties:
+          id:
+            type: string
+            description: Currently null
+            example: null
+          type:
+            type: string
+            example: "account-transactions"
+          attributes:
+            properties:
+              transactions:
+                type: array
+                items:
+                  properties:
+                    amount:
+                      type: number
+                      format: float
+                      description: Amount of money transferred for transaction, in USD.
+                      example: 200.59
+                    description:
+                      type: string
+                      description: Description of transaction.
+                      example: "Tuition Deposit Applied"
+                    entryDate:
+                      type: string
+                      format: date
+                      description: Date the transaction was entered.
+                      example: "2018-04-27T06:31:15Z"
+                    transactionType:
+                      type: string
+                      description: Indicator of the type of transaction.
+                      example: "P"
   AcademicStatusResultObject:
     properties:
       data:
