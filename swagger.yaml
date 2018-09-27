@@ -12,11 +12,11 @@ externalDocs:
 schemes:
   - https
 host: api.oregonstate.edu
-basePath: /v1/students
+basePath: /v1
 produces:
   - application/json
 paths:
-  /{osuID}/account-balance:
+  /students/{osuID}/account-balance:
     get:
       description: Get a student's current account balance.
       parameters:
@@ -32,7 +32,7 @@ paths:
           description: Student not found
           schema:
             $ref: '#/definitions/Error'
-  /{osuID}/account-transactions:
+  /students/{osuID}/account-transactions:
     get:
       description: Get a student's history of account transactions.
       parameters:
@@ -48,7 +48,7 @@ paths:
           description: Student not found
           schema:
             $ref: '#/definitions/Error'
-  /{osuID}/gpa:
+  /students/{osuID}/gpa:
     get:
       description: Get a student's overall grade point averages.
       parameters:
@@ -64,7 +64,7 @@ paths:
           description: Student not found
           schema:
             $ref: '#/definitions/Error'
-  /{osuID}/academic-status:
+  /students/{osuID}/academic-status:
     get:
       description: Get terms a student was registered for
       parameters:
@@ -85,7 +85,7 @@ paths:
           description: Student not found
           schema:
             $ref: '#/definitions/Error'
-  /{osuID}/grades:
+  /students/{osuID}/grades:
     get:
       description: Get a student's final grades for their classes.
       parameters:
@@ -106,7 +106,7 @@ paths:
           description: Student not found
           schema:
             $ref: '#/definitions/Error'
-  /{osuID}/class-schedule:
+  /students/{osuID}/class-schedule:
     get:
       description: >
         Get a student's class schedule. If no 'term' parameter is provided,
@@ -129,7 +129,7 @@ paths:
           description: Student not found
           schema:
             $ref: '#/definitions/Error'
-  /{osuID}/holds:
+  /students/{osuID}/holds:
     get:
       description: Get a student's current holds.
       parameters:
@@ -157,7 +157,10 @@ parameters:
     name: term
     in: query
     required: false
-    description: "Term code. Example: 201802"
+    description: >
+      Term code. Example: 201802. You can also specify 'current' to get the current term.
+      During academic breaks, the current term will be the current or the
+      most future term. For example, during spring break, the current term will be the spring term.
     type: string
   pretty:
     name: pretty
@@ -180,9 +183,7 @@ definitions:
       data:
         properties:
           id:
-            type: string
-            description: Student ID
-            example: "931234567"
+            $ref: "#/definitions/StudentID"
           type:
             type: string
             example: "account-balance"
@@ -200,9 +201,7 @@ definitions:
       data:
         properties:
           id:
-            type: string
-            description: Student ID
-            example: "931234567"
+            $ref: "#/definitions/StudentID"
           type:
             type: string
             example: "account-transactions"
@@ -226,10 +225,6 @@ definitions:
                       format: date
                       description: Date the transaction was entered.
                       example: "2018-04-27T06:31:15Z"
-                    transactionType:
-                      type: string
-                      description: Indicator of the type of transaction.
-                      example: "P"
   AcademicStatusResultObject:
     properties:
       links:
@@ -239,8 +234,7 @@ definitions:
         items:
           properties:
             id:
-              type: string
-              example: "931234567-201901"
+              $ref: "#/definitions/StudentAndTermID"
             type:
               type: string
               example: "academic-status"
@@ -269,10 +263,6 @@ definitions:
                   description: Description of the term.
                   type: string
                   example: "Fall 2018"
-                deansList:
-                  description: Description of dean's list status.
-                  type: string
-                  example: "Honor Roll"
                 gpa:
                   description: Grade point averages for the given term.
                   type: array
@@ -285,9 +275,7 @@ definitions:
       data:
         properties:
           id:
-            type: string
-            description: Student ID
-            example: "931234567"
+            $ref: "#/definitions/StudentID"
           type:
             type: string
             example: "gpa"
@@ -345,8 +333,7 @@ definitions:
         items:
           properties:
             id:
-              type: string
-              example: "931123456-201901-123456"
+              $ref: "#/definitions/StudentAndTermAndCourseID"
             type:
               type: string
               example: "grades"
@@ -418,8 +405,7 @@ definitions:
         items:
           properties:
             id:
-              type: string
-              example: "931123456-201901-123456"
+              $ref: "#/definitions/StudentAndTermAndCourseID"
             type:
               type: string
               example: "class-schedule"
@@ -587,9 +573,7 @@ definitions:
       data:
         properties:
           id:
-            type: string
-            description: Student ID
-            example: "931234567"
+            $ref: "#/definitions/StudentID"
           type:
             type: string
             example: "holds"
@@ -623,6 +607,16 @@ definitions:
                       description: The reason the hold is on the student's record.
                       type: string
                       example: "CS 161"
+  StudentID:
+    type: string
+    description: Student ID
+    example: "931234567"
+  StudentAndTermID:
+    type: string
+    example: "931234567-201901"
+  StudentAndTermAndCourseID:
+    type: string
+    example: "931123456-201901-123456"
   SelfLink:
     properties:
       self:
