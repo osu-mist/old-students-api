@@ -145,6 +145,39 @@ paths:
           description: Student not found
           schema:
             $ref: '#/definitions/Error'
+  /students/{osuID}/work-study:
+    get:
+      description: Get a student's available work study funding.
+      parameters:
+        - $ref: '#/parameters/osuID'
+        - $ref: '#/parameters/pretty'
+        - $ref: '#/parameters/authz'
+      responses:
+        200:
+          description: Successful response
+          schema:
+            $ref: '#/definitions/WorkStudyResultObject'
+        404:
+          description: Student not found
+          schema:
+            $ref: '#/definitions/Error'
+  /students/{osuID}/dual-enrollment:
+    get:
+      description: Get a student's enrolled credit hours from a dual enrollment institution.
+      parameters:
+        - $ref: '#/parameters/term'
+        - $ref: '#/parameters/osuID'
+        - $ref: '#/parameters/pretty'
+        - $ref: '#/parameters/authz'
+      responses:
+        200:
+          description: Successful response
+          schema:
+            $ref: '#/definitions/DualEnrollmentResultObject'
+        404:
+          description: Student not found
+          schema:
+            $ref: '#/definitions/Error'
 
 parameters:
   osuID:
@@ -607,6 +640,89 @@ definitions:
                       description: The reason the hold is on the student's record.
                       type: string
                       example: "CS 161"
+  WorkStudyResultObject:
+    properties:
+      links:
+        $ref: "#/definitions/SelfLink"
+      data:
+        properties:
+          id:
+            $ref: "#/definitions/StudentID"
+          type:
+            type: string
+            example: "work-study"
+          attributes:
+            properties:
+              awards:
+                type: array
+                items:
+                  properties:
+                    effectiveStartDate:
+                      type: string
+                      format: date
+                      description: Date the award is effective.
+                    effectiveEndDate:
+                      type: string
+                      format: date
+                      description: Date the award is no longer effective.
+                    offerAmount:
+                      type: number
+                      format: float
+                      description: Dollar amount offered for the award.
+                    offerExpirationDate:
+                      type: string
+                      format: date
+                      description: Expiration date of offer.
+                    acceptedAmount:
+                      type: number
+                      format: float
+                      description: Dollar amount accepted by awardee.
+                    acceptedDate:
+                      type: string
+                      format: date
+                      description: Date the offer was accepted by the awardee.
+                    paidAmount:
+                      type: number
+                      format: float
+                      description: Dollar amount of the acceptedAmount that has been paid to the awardee.
+                    awardStatus:
+                      type: string
+                      example: Accepted
+                      description: Status of award.
+                      enum:
+                        - "Declined"
+                        - "Offered"
+                        - "System Accepted"
+                        - "System Cancelled"
+                        - "Estimated Auto Accept"
+                        - "Estimated"
+                        - "Recommended"
+                        - "Accepted"
+                        - "Certified"
+                        - "System Offered"
+                        - "Canceled"
+  DualEnrollmentResultObject:
+    properties:
+      links:
+        $ref: "#/definitions/SelfLink"
+      data:
+        properties:
+          id:
+            $ref: "#/definitions/StudentAndTermID"
+          type:
+            type: string
+            example: "dual-enrollment"
+          attributes:
+            properties:
+              term:
+                description: The term that this course is scheduled for.
+                type: string
+                example: "201901"
+              creditHours:
+                description: The number of dual enrollment credit hours enrolled for the given term.
+                type: integer
+                example: 5
+
   StudentID:
     type: string
     description: Student ID
