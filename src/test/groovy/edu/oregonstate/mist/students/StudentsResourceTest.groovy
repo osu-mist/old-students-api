@@ -1,9 +1,9 @@
 package edu.oregonstate.mist.students
 
-import edu.oregonstate.mist.api.Error
+import edu.oregonstate.mist.api.ErrorResultObject
 import edu.oregonstate.mist.api.jsonapi.ResultObject
-import edu.oregonstate.mist.students.core.AcademicStatusObject
 import edu.oregonstate.mist.students.core.Award
+import edu.oregonstate.mist.students.core.DualEnrollment
 import edu.oregonstate.mist.students.core.WorkStudyObject
 import edu.oregonstate.mist.students.db.StudentsDAOWrapper
 import groovy.mock.interceptor.MockFor
@@ -18,16 +18,6 @@ class StudentsResourceTest {
     private final URI endpointUri = new URI("https://www.foo.com/")
 
     /**
-     * Check that not including the term query parameter returns a 400 with an expected message.
-     */
-    @Test
-    void nullTermShouldReturnBadRequest() {
-        StudentsResource studentsResource = new StudentsResource(null, endpointUri)
-        checkErrorResponse(studentsResource.getAcademicStatus("1234", null),
-                400, "term (query parameter) is required.")
-    }
-
-    /**
      * Check that the resource returns a 404 if MockDAOWrapper.getPersonID() returns null.
      */
     @Test
@@ -35,7 +25,7 @@ class StudentsResourceTest {
         def mockDAOWrapper = new MockFor(StudentsDAOWrapper)
         mockDAOWrapper.demand.getPersonID(2..2) { null }
         def studentsResource = new StudentsResource(mockDAOWrapper.proxyInstance(), endpointUri)
-        checkErrorResponse(studentsResource.getAcademicStatus("1234", "201801"), 404, null)
+        checkErrorResponse(studentsResource.getDualEnrollment("1234", "201801"), 404, null)
         checkErrorResponse(studentsResource.getWorkStudy("1234"), 404, null)
     }
 
@@ -50,7 +40,7 @@ class StudentsResourceTest {
                                     String expectedDeveloperMessage) {
         assertNotNull(response)
         assertEquals(response.status, expectedResponseCode)
-        assertEquals(response.getEntity().class, Error.class)
+        assertEquals(response.getEntity().class, ErrorResultObject.class)
 
         if (expectedDeveloperMessage) {
             assertEquals(response.getEntity()["developerMessage"], expectedDeveloperMessage)
@@ -61,23 +51,22 @@ class StudentsResourceTest {
      * Check that a good request returns a good response.
      */
     @Test
-    void testValidAcademicStatusResponse() {
+    void testValidDualEnrollmentResponse() {
         def mockDAOWrapper = getMockDAOWrapper()
 
-        AcademicStatusObject testAcademicStatus = new AcademicStatusObject(
-                osuHours: 12,
-                dualEnrollmentHours: 3,
-                academicStanding: "Good",
-                registrationBlocked: false,
-                academicProbation: false
+        String testTerm = "201801"
+
+        DualEnrollment testDualEnrollment = new DualEnrollment(
+                term: testTerm,
+                creditHours: 5
         )
 
-        mockDAOWrapper.demand.getAcademicStatus() { String id, String term -> testAcademicStatus }
+        mockDAOWrapper.demand.getDualEnrollment() { String id, String term -> [testDualEnrollment] }
 
         def studentsResource = new StudentsResource(mockDAOWrapper.proxyInstance(), endpointUri)
-        Response response = studentsResource.getAcademicStatus("912345678", "201801")
+        Response response = studentsResource.getDualEnrollment("912345678", testTerm)
 
-        responseChecker(response, testAcademicStatus)
+        responseChecker(response, testDualEnrollment)
     }
 
     @Test
@@ -112,7 +101,14 @@ class StudentsResourceTest {
         assertNotNull(response)
         assertEquals(response.status, 200)
         assertEquals(response.getEntity().class, ResultObject.class)
-        assertEquals(response.getEntity()["data"]["attributes"], expectedData)
+
+        def responseData = response.getEntity()["data"]
+
+        if (responseData instanceof List) {
+            assertEquals(responseData[0]["attributes"], expectedData)
+        } else {
+            assertEquals(responseData["attributes"], expectedData)
+        }
     }
 
     private MockFor getMockDAOWrapper() {

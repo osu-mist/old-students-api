@@ -9,11 +9,15 @@ class StudentsUriBuilder {
         this.endpointUri = endpointUri
     }
 
-    URI academicStatusUri(String osuID, String term) {
-        UriBuilder.fromUri(this.endpointUri)
-                .path("students/{osuID}/academicstatus")
-                .queryParam("term", "{term}")
-                .build(osuID, term)
+    URI dualEnrollmentUri(String osuID, String term) {
+        UriBuilder builder = UriBuilder.fromUri(this.endpointUri)
+                .path("students/{osuID}/dual-enrollment")
+
+        if (term) {
+            builder.queryParam("term", term)
+        }
+
+        builder.build(osuID)
     }
 
     URI workStudyUri(String osuID) {

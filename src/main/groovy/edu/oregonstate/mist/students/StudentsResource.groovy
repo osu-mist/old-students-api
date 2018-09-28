@@ -38,23 +38,23 @@ class StudentsResource extends Resource {
      */
     @Timed
     @GET
-    @Path ('{id: \\d+}/academicstatus')
-    Response getAcademicStatus(@PathParam("id") String osuID, @QueryParam("term") String term) {
-        if (!term?.trim()) {
-            return badRequest("term (query parameter) is required.").build()
-        }
-
+    @Path ('{osuID: [0-9a-zA-Z-]+}/dual-enrollment')
+    Response getDualEnrollment(@PathParam("osuID") String osuID, @QueryParam("term") String term) {
         String personID = studentsDAOWrapper.getPersonID(osuID)
 
         if (!personID) {
             return notFound().build()
         }
 
-        ResultObject resultObject = new ResultObject(data: new ResourceObject(
-                id: term,
-                type: "academicstatus",
-                attributes: studentsDAOWrapper.getAcademicStatus(personID, term),
-                links: ["self": uriBuilder.academicStatusUri(osuID, term)])
+        ResultObject resultObject = new ResultObject(
+                links: getSelfLink(uriBuilder.dualEnrollmentUri(osuID, term)),
+                data: studentsDAOWrapper.getDualEnrollment(personID, term).collect {
+                    new ResourceObject(
+                            id: getStudentAndTermID(osuID, it.term),
+                            type: "dual-enrollment",
+                            attributes: it,
+                    )
+                }
         )
 
         ok(resultObject).build()
@@ -67,7 +67,7 @@ class StudentsResource extends Resource {
      */
     @Timed
     @GET
-    @Path ('{id: \\d+}/workstudy')
+    @Path ('{id: [0-9a-zA-Z-]+}/workstudy')
     Response getWorkStudy(@PathParam("id") String osuID) {
         String personID = studentsDAOWrapper.getPersonID(osuID)
 
@@ -82,5 +82,13 @@ class StudentsResource extends Resource {
         ))
 
         ok(resultObject).build()
+    }
+
+    private def getSelfLink(URI uri) {
+        ["self": uri]
+    }
+
+    private String getStudentAndTermID(String id, String term) {
+        "${id}-${term}"
     }
 }

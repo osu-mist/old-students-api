@@ -22,12 +22,19 @@ class StudentsUriBuilderTest {
     @Test
     void testAcademicStatusUriBuilder() {
         String term = "201801"
-        String expectedUri =
-                "${endpointUri.toString()}/students/${osuID}/academicstatus?term=${term}"
+        String expectedUriWithTerm =
+                "${endpointUri.toString()}/students/${osuID}/dual-enrollment?term=${term}"
 
-        URI builderUri = studentsUriBuilder.academicStatusUri(osuID, term)
+        URI builderUriWithTerm = studentsUriBuilder.dualEnrollmentUri(osuID, term)
 
-        assertEquals(expectedUri, builderUri.toString())
+        assertEquals(expectedUriWithTerm, builderUriWithTerm.toString())
+
+        String expectedUriWithoutTerm =
+                "${endpointUri.toString()}/students/${osuID}/dual-enrollment"
+
+        URI builderUriWithoutTerm = studentsUriBuilder.dualEnrollmentUri(osuID, null)
+
+        assertEquals(expectedUriWithoutTerm, builderUriWithoutTerm.toString())
     }
 
     /**

@@ -1,6 +1,6 @@
 package edu.oregonstate.mist.students.db
 
-import edu.oregonstate.mist.students.core.AcademicStatusObject
+import edu.oregonstate.mist.students.core.DualEnrollment
 import edu.oregonstate.mist.students.core.WorkStudyObject
 
 class StudentsDAOWrapper {
@@ -20,23 +20,13 @@ class StudentsDAOWrapper {
     }
 
     /**
-     * Return a complete AcademicStatusObject with credits and academic standing.
+     * Return a list of DualEnrollment objects with dual enrollment credit hours.
      * @param personID
      * @param term
      * @return
      */
-    public AcademicStatusObject getAcademicStatus(String personID, String term) {
-        AcademicStatusObject academicStatus = studentsDAO.getAcademicStanding(personID, term)
-
-        if (!academicStatus) {
-            academicStatus = new AcademicStatusObject()
-        }
-
-        academicStatus.osuHours = studentsDAO.getOSUCreditHours(personID, term)
-        academicStatus.dualEnrollmentHours = studentsDAO.getDualEnrollmentCreditHours(personID,
-                term)
-
-        academicStatus
+    public List<DualEnrollment> getDualEnrollment(String personID, String term) {
+        studentsDAO.getDualEnrollment(personID, term)
     }
 
     /**
