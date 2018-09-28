@@ -1,10 +1,9 @@
 package edu.oregonstate.mist.students.db
 
 import edu.oregonstate.mist.contrib.AbstractStudentsDAO
-import edu.oregonstate.mist.students.core.AcademicStatusObject
 import edu.oregonstate.mist.students.core.Award
 import edu.oregonstate.mist.students.core.DualEnrollment
-import edu.oregonstate.mist.students.mapper.AcademicStandingMapper
+
 import edu.oregonstate.mist.students.mapper.AwardMapper
 import edu.oregonstate.mist.students.mapper.DualEnrollmentMapper
 import org.skife.jdbi.v2.sqlobject.Bind
