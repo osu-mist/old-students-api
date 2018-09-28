@@ -42,7 +42,7 @@ class StudentsUriBuilderTest {
      */
     @Test
     void testWorkStudyUriBuilder() {
-        String expectedUri = "${endpointUri.toString()}/students/${osuID}/workstudy"
+        String expectedUri = "${endpointUri.toString()}/students/${osuID}/work-study"
 
         URI builderUri = studentsUriBuilder.workStudyUri(osuID)
 

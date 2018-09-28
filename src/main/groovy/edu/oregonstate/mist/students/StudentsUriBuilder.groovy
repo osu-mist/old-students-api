@@ -22,7 +22,7 @@ class StudentsUriBuilder {
 
     URI workStudyUri(String osuID) {
         UriBuilder.fromUri(this.endpointUri)
-                .path("students/{osuID}/workstudy")
+                .path("students/{osuID}/work-study")
                 .build(osuID)
     }
 }

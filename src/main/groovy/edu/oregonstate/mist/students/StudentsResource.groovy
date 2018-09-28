@@ -67,7 +67,7 @@ class StudentsResource extends Resource {
      */
     @Timed
     @GET
-    @Path ('{id: [0-9a-zA-Z-]+}/workstudy')
+    @Path ('{id: [0-9a-zA-Z-]+}/work-study')
     Response getWorkStudy(@PathParam("id") String osuID) {
         String personID = studentsDAOWrapper.getPersonID(osuID)
 
@@ -75,10 +75,12 @@ class StudentsResource extends Resource {
             return notFound().build()
         }
 
-        ResultObject resultObject = new ResultObject(data: new ResourceObject(
-                type: "workstudy",
-                attributes: studentsDAOWrapper.getWorkStudy(personID),
-                links: ["self": uriBuilder.workStudyUri(osuID)]
+        ResultObject resultObject = new ResultObject(
+                links: getSelfLink(uriBuilder.workStudyUri(osuID)),
+                data: new ResourceObject(
+                        id: osuID,
+                        type: "work-study",
+                        attributes: studentsDAOWrapper.getWorkStudy(personID)
         ))
 
         ok(resultObject).build()
