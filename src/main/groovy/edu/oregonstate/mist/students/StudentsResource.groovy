@@ -30,6 +30,12 @@ class StudentsResource extends Resource {
         this.uriBuilder = new StudentsUriBuilder(endpointUri)
     }
 
+    @Timed
+    @GET
+    Response getHealthCheck() {
+        ok(studentsDAOWrapper.healthcheck()).build()
+    }
+
     /**
      * Get academic status for a student, including enrolled credits and academic standing.
      * @param osuID
@@ -67,8 +73,8 @@ class StudentsResource extends Resource {
      */
     @Timed
     @GET
-    @Path ('{id: [0-9a-zA-Z-]+}/work-study')
-    Response getWorkStudy(@PathParam("id") String osuID) {
+    @Path ('{osuID: [0-9a-zA-Z-]+}/work-study')
+    Response getWorkStudy(@PathParam("osuID") String osuID) {
         String personID = studentsDAOWrapper.getPersonID(osuID)
 
         if (!personID) {
@@ -81,7 +87,24 @@ class StudentsResource extends Resource {
                         id: osuID,
                         type: "work-study",
                         attributes: studentsDAOWrapper.getWorkStudy(personID)
-        ))
+                )
+        )
+
+        ok(resultObject).build()
+    }
+
+    @Timed
+    @GET
+    @Path ('{osuID: [0-9a-zA-Z-]+}/account-balance')
+    Response getAccountBalance(@PathParam("osuID") String osuID) {
+        ResultObject resultObject = new ResultObject(
+                links: getSelfLink(uriBuilder.accountBalanceUri(osuID)),
+                data: new ResourceObject(
+                        id: osuID,
+                        type: "account-balance",
+                        attributes: studentsDAOWrapper.getAccountBalance(osuID)
+                )
+        )
 
         ok(resultObject).build()
     }

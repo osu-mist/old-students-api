@@ -1,13 +1,16 @@
 package edu.oregonstate.mist.students.db
 
+import edu.oregonstate.mist.students.core.AccountBalance
 import edu.oregonstate.mist.students.core.DualEnrollment
 import edu.oregonstate.mist.students.core.WorkStudyObject
 
 class StudentsDAOWrapper {
     private final StudentsDAO studentsDAO
+    private final HttpStudentsDAO httpStudentsDAO
 
-    StudentsDAOWrapper(StudentsDAO studentsDAO) {
+    StudentsDAOWrapper(StudentsDAO studentsDAO, HttpStudentsDAO httpStudentsDAO) {
         this.studentsDAO = studentsDAO
+        this.httpStudentsDAO = httpStudentsDAO
     }
 
     /**
@@ -36,5 +39,13 @@ class StudentsDAOWrapper {
      */
     public WorkStudyObject getWorkStudy(String personID) {
         new WorkStudyObject(awards: studentsDAO.getWorkStudy(personID))
+    }
+
+    public String healthcheck() {
+        httpStudentsDAO.healthCheck()
+    }
+
+    public AccountBalance getAccountBalance(String osuID) {
+        httpStudentsDAO.getAccountBalance(osuID)
     }
 }

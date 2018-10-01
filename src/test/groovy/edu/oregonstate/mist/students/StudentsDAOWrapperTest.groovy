@@ -19,7 +19,7 @@ class StudentsDAOWrapperTest {
         def mockDAO = getMockDAO()
         mockDAO.demand.getPersonID() { null }
 
-        def mockDAOWrapper = new StudentsDAOWrapper(mockDAO.proxyInstance())
+        def mockDAOWrapper = new StudentsDAOWrapper(mockDAO.proxyInstance(), null)
 
         assertNull(mockDAOWrapper.getPersonID("912345678"))
     }
@@ -42,7 +42,7 @@ class StudentsDAOWrapperTest {
 
         def mockDAO = getMockDAO()
         mockDAO.demand.getWorkStudy() { awards }
-        def mockDAOWrapper = new StudentsDAOWrapper(mockDAO.proxyInstance())
+        def mockDAOWrapper = new StudentsDAOWrapper(mockDAO.proxyInstance(), null)
         WorkStudyObject workStudy = mockDAOWrapper.getWorkStudy("987654321")
 
         assertEquals(workStudy.awards, awards)

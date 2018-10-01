@@ -25,4 +25,10 @@ class StudentsUriBuilder {
                 .path("students/{osuID}/work-study")
                 .build(osuID)
     }
+
+    URI accountBalanceUri(String osuID) {
+        UriBuilder.fromUri(this.endpointUri)
+                .path("students/{osuID}/account-balance")
+                .build(osuID)
+    }
 }

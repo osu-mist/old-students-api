@@ -2,6 +2,7 @@ package edu.oregonstate.mist.students
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import edu.oregonstate.mist.api.Configuration
+import io.dropwizard.client.HttpClientConfiguration
 import io.dropwizard.db.DataSourceFactory
 
 import javax.validation.Valid
@@ -23,4 +24,12 @@ class StudentsConfiguration extends Configuration {
     public void setDataSourceFactory(DataSourceFactory dataSourceFactory) {
         this.database = dataSourceFactory
     }
+
+    @Valid
+    @NotNull
+    Map<String, String> httpDataSource
+
+    @Valid
+    @NotNull
+    HttpClientConfiguration httpClient
 }
