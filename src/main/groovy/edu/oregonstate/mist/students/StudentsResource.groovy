@@ -4,6 +4,9 @@ import com.codahale.metrics.annotation.Timed
 import edu.oregonstate.mist.api.Resource
 import edu.oregonstate.mist.api.jsonapi.ResourceObject
 import edu.oregonstate.mist.api.jsonapi.ResultObject
+import edu.oregonstate.mist.students.core.AccountBalance
+import edu.oregonstate.mist.students.core.AccountTransactions
+import edu.oregonstate.mist.students.db.StudentNotFoundException
 import edu.oregonstate.mist.students.db.StudentsDAOWrapper
 import groovy.transform.TypeChecked
 
@@ -97,18 +100,49 @@ class StudentsResource extends Resource {
     @GET
     @Path ('{osuID: [0-9a-zA-Z-]+}/account-balance')
     Response getAccountBalance(@PathParam("osuID") String osuID) {
+        AccountBalance accountBalance
+
+        try {
+            accountBalance = studentsDAOWrapper.getAccountBalance(osuID)
+        } catch (StudentNotFoundException) {
+            return notFound().build()
+        }
+
         ResultObject resultObject = new ResultObject(
                 links: getSelfLink(uriBuilder.accountBalanceUri(osuID)),
                 data: new ResourceObject(
                         id: osuID,
                         type: "account-balance",
-                        attributes: studentsDAOWrapper.getAccountBalance(osuID)
+                        attributes: accountBalance
                 )
         )
 
         ok(resultObject).build()
     }
 
+    @Timed
+    @GET
+    @Path ('{osuID: [0-9a-zA-Z-]+}/account-transactions')
+    Response getAccountTransactions(@PathParam("osuID") String osuID) {
+        AccountTransactions accountTransactions
+
+        try {
+            accountTransactions = studentsDAOWrapper.getAccountTransactions(osuID)
+        } catch (StudentNotFoundException) {
+            return notFound().build()
+        }
+
+        ResultObject resultObject = new ResultObject(
+                links: getSelfLink(uriBuilder.accountTransactionsUri(osuID)),
+                data: new ResourceObject(
+                        id: osuID,
+                        type: "account-transactions",
+                        attributes: accountTransactions
+                )
+        )
+
+        ok(resultObject).build()
+    }
     private def getSelfLink(URI uri) {
         ["self": uri]
     }

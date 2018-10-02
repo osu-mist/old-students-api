@@ -10,25 +10,28 @@ class StudentsUriBuilder {
     }
 
     URI dualEnrollmentUri(String osuID, String term) {
-        UriBuilder builder = UriBuilder.fromUri(this.endpointUri)
-                .path("students/{osuID}/dual-enrollment")
+        genericUri("dual-enrollment", osuID, term)
+    }
+
+    URI workStudyUri(String osuID) {
+        genericUri("work-study", osuID)
+    }
+
+    URI accountBalanceUri(String osuID) {
+        genericUri("account-balance", osuID)
+    }
+
+    URI accountTransactionsUri(String osuID) {
+        genericUri("account-transactions", osuID)
+    }
+
+    private URI genericUri(String endpoint, String osuID, String term = null) {
+        UriBuilder builder = UriBuilder.fromUri(this.endpointUri).path("students/{osuID}/$endpoint")
 
         if (term) {
             builder.queryParam("term", term)
         }
 
         builder.build(osuID)
-    }
-
-    URI workStudyUri(String osuID) {
-        UriBuilder.fromUri(this.endpointUri)
-                .path("students/{osuID}/work-study")
-                .build(osuID)
-    }
-
-    URI accountBalanceUri(String osuID) {
-        UriBuilder.fromUri(this.endpointUri)
-                .path("students/{osuID}/account-balance")
-                .build(osuID)
     }
 }

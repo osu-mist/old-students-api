@@ -1,8 +1,10 @@
 package edu.oregonstate.mist.students.db
 
 import edu.oregonstate.mist.students.core.AccountBalance
+import edu.oregonstate.mist.students.core.AccountTransactions
 import edu.oregonstate.mist.students.core.DualEnrollment
 import edu.oregonstate.mist.students.core.WorkStudyObject
+import groovy.transform.InheritConstructors
 
 class StudentsDAOWrapper {
     private final StudentsDAO studentsDAO
@@ -48,4 +50,11 @@ class StudentsDAOWrapper {
     public AccountBalance getAccountBalance(String osuID) {
         httpStudentsDAO.getAccountBalance(osuID)
     }
+
+    public AccountTransactions getAccountTransactions(String osuID) {
+        httpStudentsDAO.getAccountTransactions(osuID)
+    }
 }
+
+@InheritConstructors
+class StudentNotFoundException extends Exception {}
