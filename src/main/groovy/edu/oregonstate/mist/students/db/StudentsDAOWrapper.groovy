@@ -3,6 +3,7 @@ package edu.oregonstate.mist.students.db
 import edu.oregonstate.mist.students.core.AccountBalance
 import edu.oregonstate.mist.students.core.AccountTransactions
 import edu.oregonstate.mist.students.core.DualEnrollment
+import edu.oregonstate.mist.students.core.GPALevels
 import edu.oregonstate.mist.students.core.WorkStudyObject
 import groovy.transform.InheritConstructors
 
@@ -43,16 +44,16 @@ class StudentsDAOWrapper {
         new WorkStudyObject(awards: studentsDAO.getWorkStudy(personID))
     }
 
-    public String healthcheck() {
-        httpStudentsDAO.healthCheck()
-    }
-
     public AccountBalance getAccountBalance(String osuID) {
         httpStudentsDAO.getAccountBalance(osuID)
     }
 
     public AccountTransactions getAccountTransactions(String osuID) {
         httpStudentsDAO.getAccountTransactions(osuID)
+    }
+
+    public GPALevels getGPA(String osuID) {
+        httpStudentsDAO.getGPA(osuID)
     }
 }
 

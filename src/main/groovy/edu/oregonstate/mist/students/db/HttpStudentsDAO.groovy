@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import edu.oregonstate.mist.students.core.AccountBalance
 import edu.oregonstate.mist.students.core.AccountTransactions
+import edu.oregonstate.mist.students.core.GPALevels
 import org.apache.http.HttpHeaders
 import org.apache.http.HttpResponse
 import org.apache.http.HttpStatus
@@ -17,7 +18,6 @@ import org.slf4j.LoggerFactory
 
 import javax.ws.rs.core.UriBuilder
 import java.time.Instant
-import java.time.ZonedDateTime
 
 class HttpStudentsDAO {
     private HttpClient httpClient
@@ -26,6 +26,7 @@ class HttpStudentsDAO {
     private final String studentsEndpoint = "students"
     private final String accountBalanceEndpoint = "account-balances"
     private final String accountTransactionsEndpoint = "account-transactions"
+    private final String academicStandingsEndpoint = "gpa-academic-standings"
 
     private static Logger logger = LoggerFactory.getLogger(this)
 
@@ -54,18 +55,17 @@ class HttpStudentsDAO {
         AccountTransactions.fromBackendAccountTransactions(accountTransactions)
     }
 
-    public String healthCheck() {
-        HttpResponse httpResponse = getResponse("healthcheck")
+    protected GPALevels getGPA(String id) {
+        String response = getResponse("$studentsEndpoint/$id/$academicStandingsEndpoint")
 
-        String response = EntityUtils.toString(httpResponse.entity)
+        def unmappedResponse = objectMapper.readValue(
+                response, new TypeReference<List<HashMap>>() {}
+        )
 
-        String status = httpResponse.statusLine.toString()
+        List<BackendGPA> gpas = objectMapper.convertValue(unmappedResponse[0]["levelGPAs"],
+                new TypeReference<List<BackendGPA>>() {})
 
-        logger.info("Response status: $status")
-
-        logger.info(response)
-
-        response
+        GPALevels.fromBackendGPA(gpas)
     }
 
     private String getResponse(String endpoint) {
@@ -100,4 +100,16 @@ class BackendAccountTransaction {
     BigDecimal amount
     String description
     Instant entryDate
+}
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+class BackendGPA {
+    String gpa
+    Integer gpaHours
+    String gpaTypeIndicatorDescription
+    Integer hoursAttempted
+    Integer hoursEarned
+    Integer hoursPassed
+    String levelDescription
+    String qualityPoints
 }

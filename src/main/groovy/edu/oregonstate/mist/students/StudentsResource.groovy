@@ -6,6 +6,7 @@ import edu.oregonstate.mist.api.jsonapi.ResourceObject
 import edu.oregonstate.mist.api.jsonapi.ResultObject
 import edu.oregonstate.mist.students.core.AccountBalance
 import edu.oregonstate.mist.students.core.AccountTransactions
+import edu.oregonstate.mist.students.core.GPALevels
 import edu.oregonstate.mist.students.db.StudentNotFoundException
 import edu.oregonstate.mist.students.db.StudentsDAOWrapper
 import groovy.transform.TypeChecked
@@ -31,12 +32,6 @@ class StudentsResource extends Resource {
         this.studentsDAOWrapper = studentsDAOWrapper
         this.endpointUri = endpointUri
         this.uriBuilder = new StudentsUriBuilder(endpointUri)
-    }
-
-    @Timed
-    @GET
-    Response getHealthCheck() {
-        ok(studentsDAOWrapper.healthcheck()).build()
     }
 
     /**
@@ -143,6 +138,31 @@ class StudentsResource extends Resource {
 
         ok(resultObject).build()
     }
+
+    @Timed
+    @GET
+    @Path ('{osuID: [0-9a-zA-Z-]+}/gpa')
+    Response getGPA(@PathParam("osuID") String osuID) {
+        GPALevels gpa
+
+        try {
+            gpa = studentsDAOWrapper.getGPA(osuID)
+        } catch (StudentNotFoundException) {
+            return notFound().build()
+        }
+
+        ResultObject resultObject = new ResultObject(
+                links: getSelfLink(uriBuilder.gpaUri(osuID)),
+                data: new ResourceObject(
+                        id: osuID,
+                        type: "gpa",
+                        attributes: gpa
+                )
+        )
+
+        ok(resultObject).build()
+    }
+
     private def getSelfLink(URI uri) {
         ["self": uri]
     }
