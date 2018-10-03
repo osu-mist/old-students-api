@@ -112,7 +112,14 @@ paths:
         Get a student's class schedule. If no 'term' parameter is provided,
         active registrations for all terms will be returned.
       parameters:
-        - $ref: '#/parameters/term'
+        - name: term
+          in: query
+          required: true
+          description: >
+            Term code. Example: 201802. You can also specify 'current' to get the current term.
+            During academic breaks, the current term will be the current or the
+            most future term. For example, during spring break, the current term will be the spring term.
+          type: string
         - $ref: '#/parameters/osuID'
         - $ref: '#/parameters/pretty'
         - $ref: '#/parameters/authz'
@@ -507,7 +514,7 @@ definitions:
                   type: array
                   items:
                     properties:
-                      personID:
+                      osuID:
                         description: Person ID for the faculty.
                         type: string
                         example: "937654321"
@@ -536,7 +543,7 @@ definitions:
                       beginTime:
                         description: The starting time of the meeting time for the course in 24 hour format.
                         type: string
-                        example: "14:00"
+                        example: "14:00:00"
                       endDate:
                         description: The ending date of the meeting time schedule.
                         type: string
@@ -545,7 +552,7 @@ definitions:
                       endTime:
                         description: The starting time of the meeting time for the course in 24 hour format.
                         type: string
-                        example: "14:50"
+                        example: "14:50:00"
                       room:
                         description: Room where the meeting time meets.
                         type: string

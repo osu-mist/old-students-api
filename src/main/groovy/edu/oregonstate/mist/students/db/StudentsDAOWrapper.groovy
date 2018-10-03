@@ -3,6 +3,7 @@ package edu.oregonstate.mist.students.db
 import edu.oregonstate.mist.students.core.AcademicStatus
 import edu.oregonstate.mist.students.core.AccountBalance
 import edu.oregonstate.mist.students.core.AccountTransactions
+import edu.oregonstate.mist.students.core.ClassSchedule
 import edu.oregonstate.mist.students.core.DualEnrollment
 import edu.oregonstate.mist.students.core.GPALevels
 import edu.oregonstate.mist.students.core.Grade
@@ -76,6 +77,10 @@ class StudentsDAOWrapper {
 
     public List<Grade> getGrades(String osuID, String term) {
         httpStudentsDAO.getGrades(osuID, getTerm(term))
+    }
+
+    public List<ClassSchedule> getClassSchedule(String osuID, String term) {
+        httpStudentsDAO.getClassSchedule(osuID, getTerm(term))
     }
 
     private String getTerm(String term) {

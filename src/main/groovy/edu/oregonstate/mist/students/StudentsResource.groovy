@@ -7,6 +7,7 @@ import edu.oregonstate.mist.api.jsonapi.ResultObject
 import edu.oregonstate.mist.students.core.AcademicStatus
 import edu.oregonstate.mist.students.core.AccountBalance
 import edu.oregonstate.mist.students.core.AccountTransactions
+import edu.oregonstate.mist.students.core.ClassSchedule
 import edu.oregonstate.mist.students.core.DualEnrollment
 import edu.oregonstate.mist.students.core.GPALevels
 import edu.oregonstate.mist.students.core.Grade
@@ -222,6 +223,38 @@ class StudentsResource extends Resource {
                     new ResourceObject(
                             id: getResourceObjectID(osuID, it.term, it.courseReferenceNumber),
                             type: "grades",
+                            attributes: it
+                    )
+                }
+        )
+
+        ok(resultObject).build()
+    }
+
+    @Timed
+    @GET
+    @Path ('{osuID: [0-9a-zA-Z-]+}/class-schedule')
+    Response getClassSchedule(@PathParam("osuID") String osuID, @QueryParam("term") String term) {
+        if (!term) {
+            return badRequest("Term (query parameter) is required.").build()
+        }
+
+        List<ClassSchedule> classSchedule
+
+        try {
+            classSchedule = studentsDAOWrapper.getClassSchedule(osuID, term)
+        } catch (StudentNotFoundException e) {
+            return notFound().build()
+        } catch (InvalidTermException e) {
+            return invalidTermResponse()
+        }
+
+        ResultObject resultObject = new ResultObject(
+                links: getSelfLink(uriBuilder.classScheduleUri(osuID, term)),
+                data: classSchedule.collect {
+                    new ResourceObject(
+                            id: getResourceObjectID(osuID, it.term, it.courseReferenceNumber),
+                            type: "class-schedule",
                             attributes: it
                     )
                 }

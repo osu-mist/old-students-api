@@ -1,5 +1,6 @@
 package edu.oregonstate.mist.students.db
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.core.type.TypeReference
@@ -8,6 +9,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import edu.oregonstate.mist.students.core.AcademicStatus
 import edu.oregonstate.mist.students.core.AccountBalance
 import edu.oregonstate.mist.students.core.AccountTransactions
+import edu.oregonstate.mist.students.core.ClassSchedule
 import edu.oregonstate.mist.students.core.GPALevels
 import edu.oregonstate.mist.students.core.Grade
 import groovy.transform.InheritConstructors
@@ -22,6 +24,9 @@ import org.slf4j.LoggerFactory
 
 import javax.ws.rs.core.UriBuilder
 import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 
 class HttpStudentsDAO {
     private HttpClient httpClient
@@ -32,6 +37,7 @@ class HttpStudentsDAO {
     private final String accountTransactionsEndpoint = "account-transactions"
     private final String academicStandingsEndpoint = "gpa-academic-standings"
     private final String gradesEndpoint = "grades"
+    private final String classSchedulesEndpoint = "class-schedules"
 
     private static Logger logger = LoggerFactory.getLogger(this)
 
@@ -102,6 +108,19 @@ class HttpStudentsDAO {
                 response, new TypeReference<List<BackendGrade>>() {})
 
         grades.collect { Grade.fromBackendGrade(it) }
+    }
+
+    protected List<ClassSchedule> getClassSchedule(String id, String term) {
+        String response = getResponse(getStudentsEndpoint(id, classSchedulesEndpoint), term)
+
+        def unmappedResponse = objectMapper.readValue(response,
+                new TypeReference<List<HashMap>>() {})
+
+        List<BackendClassSchedule> classSchedule = objectMapper.convertValue(
+                unmappedResponse[0]["studentCourseRegistrations"],
+                new TypeReference<List<BackendClassSchedule>>() {})
+
+        classSchedule.collect { ClassSchedule.fromBackendClassSchedule(it) }
     }
 
     private String getResponse(String endpoint, String term = null) {
@@ -175,6 +194,14 @@ class HttpStudentsDAO {
     private String getStudentsEndpoint(String id, String endpoint) {
         "$studentsEndpoint/$id/$endpoint"
     }
+
+    static String getCode(Map<String, String> map) {
+        map.get("code")
+    }
+
+    static String getDescription(Map<String, String> map) {
+        map.get("description")
+    }
 }
 
 @InheritConstructors
@@ -230,8 +257,8 @@ class BackendGrade {
 
     @JsonProperty("subject")
     private void unpackSubject(Map<String, String> subject) {
-        this.courseSubject = getCode(subject)
-        this.courseSubjectDescription = getDescription(subject)
+        this.courseSubject = HttpStudentsDAO.getCode(subject)
+        this.courseSubjectDescription = HttpStudentsDAO.getDescription(subject)
     }
 
     String courseNumber
@@ -243,15 +270,15 @@ class BackendGrade {
 
     @JsonProperty("term")
     private void unpackTerm(Map<String, String> term) {
-        this.term = getCode(term)
-        this.termDescription = getDescription(term)
+        this.term = HttpStudentsDAO.getCode(term)
+        this.termDescription = HttpStudentsDAO.getDescription(term)
     }
 
     String classFormat
 
     @JsonProperty("classFormat")
     private void unpackClassFormat(Map<String, String> classFormat) {
-        this.classFormat = getDescription(classFormat)
+        this.classFormat = HttpStudentsDAO.getDescription(classFormat)
     }
 
     Integer creditHour
@@ -260,21 +287,98 @@ class BackendGrade {
 
     @JsonProperty("registrationStatus")
     private void unpackRegistrationStatus(Map<String, String> registrationStatus) {
-        this.registrationStatus = getDescription(registrationStatus)
+        this.registrationStatus = HttpStudentsDAO.getDescription(registrationStatus)
     }
 
     String courseLevel
 
     @JsonProperty("level")
     private void unpackCourseLevel(Map<String, String> courseLevel) {
-        this.courseLevel = getDescription(courseLevel)
+        this.courseLevel = HttpStudentsDAO.getDescription(courseLevel)
+    }
+}
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+class BackendClassSchedule {
+    String academicYear
+    String academicYearDescription
+    String courseReferenceNumber
+    String subject
+    String subjectDescription
+    String courseNumber
+    String courseTitle
+    String sequenceNumber
+    String term
+    String termDescription
+    String scheduleDescription
+    Integer creditHour
+
+    String registrationStatus
+
+    @JsonProperty("courseRegistrationStatus")
+    private void unpackRegistrationStatus(Map<String, String> registrationStatus) {
+        this.registrationStatus = HttpStudentsDAO.getDescription(registrationStatus)
     }
 
-    private String getCode(Map<String, String> map) {
-        map.get("code")
+    String gradingModeDescription
+
+    Boolean continuingEducation
+
+    @JsonProperty("level")
+    private void unpackContinuingEducation(Map<String, Boolean> continuingEducation) {
+        this.continuingEducation = continuingEducation.get("ceuInd")
     }
 
-    private String getDescription(Map<String, String> map) {
-        map.get("description")
+    List<BackendFaculty> faculty
+    List<BackendMeetingTime> meetingTimes
+}
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+class BackendFaculty {
+    String bannerId
+    String displayName
+    String emailAddress
+    Boolean primaryIndicator
+}
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+class BackendMeetingTime {
+    LocalDate startDate
+    LocalDate endDate
+
+    // The backend datasource formats times as 4 character strings. Ex: "1150".
+    // We deserialize these as strings, and then convert them to
+    // a LocalTime object before serialization.
+
+    private static DateTimeFormatter backendTimeFormat = DateTimeFormatter.ofPattern("HHmm")
+
+    @JsonIgnore
+    LocalTime beginTime
+
+    @JsonProperty("beginTime")
+    private void setBeginTime(String beginTime) {
+        this.beginTime = LocalTime.parse(beginTime, backendTimeFormat)
     }
+
+    @JsonIgnore
+    LocalTime endTime
+
+    @JsonProperty("endTime")
+    private void setEndTime(String endTime) {
+        this.endTime = LocalTime.parse(endTime, backendTimeFormat)
+    }
+
+    String room
+    String building
+    String buildingDescription
+    String campusDescription
+    BigDecimal hoursWeek
+    Integer creditHourSession
+    Boolean sunday
+    Boolean monday
+    Boolean tuesday
+    Boolean wednesday
+    Boolean thursday
+    Boolean friday
+    Boolean saturday
 }

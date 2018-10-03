@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonFormat
 import edu.oregonstate.mist.students.db.BackendAccountTransaction
 
 import java.time.Instant
-import java.time.ZonedDateTime
 
 class AccountTransactions {
     List<Transaction> transactions
