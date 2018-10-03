@@ -23,8 +23,14 @@ class StudentsDAOWrapper {
      * @param osuID
      * @return
      */
-    public String getPersonID(String osuID) {
-        studentsDAO.getPersonID(osuID)
+    private String getPersonID(String osuID) {
+        String personID = studentsDAO.getPersonID(osuID)
+
+        if (!personID) {
+            throw new StudentNotFoundException("Student not found")
+        }
+
+        personID
     }
 
     /**
@@ -33,8 +39,14 @@ class StudentsDAOWrapper {
      * @param term
      * @return
      */
-    public List<DualEnrollment> getDualEnrollment(String personID, String term) {
-        studentsDAO.getDualEnrollment(personID, term)
+    public List<DualEnrollment> getDualEnrollment(String osuID, String term) {
+        term = getTerm(term)
+
+        if (term && !studentsDAO.isValidTerm(term)) {
+            throw new InvalidTermException("Term: $term is invalid.")
+        }
+
+        studentsDAO.getDualEnrollment(getPersonID(osuID), getTerm(term))
     }
 
     /**
@@ -42,8 +54,8 @@ class StudentsDAOWrapper {
      * @param personID
      * @return
      */
-    public WorkStudyObject getWorkStudy(String personID) {
-        new WorkStudyObject(awards: studentsDAO.getWorkStudy(personID))
+    public WorkStudyObject getWorkStudy(String osuID) {
+        new WorkStudyObject(awards: studentsDAO.getWorkStudy(getPersonID(osuID)))
     }
 
     public AccountBalance getAccountBalance(String osuID) {
@@ -59,11 +71,19 @@ class StudentsDAOWrapper {
     }
 
     public List<AcademicStatus> getAcademicStatus(String osuID, String term) {
-        httpStudentsDAO.getAcademicStatus(osuID, term)
+        httpStudentsDAO.getAcademicStatus(osuID, getTerm(term))
     }
 
     public List<Grade> getGrades(String osuID, String term) {
-        httpStudentsDAO.getGrades(osuID, term)
+        httpStudentsDAO.getGrades(osuID, getTerm(term))
+    }
+
+    private String getTerm(String term) {
+        if (term == "current") {
+            studentsDAO.getCurrentTerm()
+        } else {
+            term
+        }
     }
 }
 

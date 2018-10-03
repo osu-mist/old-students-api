@@ -39,6 +39,21 @@ public interface StudentsDAO extends Closeable {
     @SqlQuery(AbstractStudentsDAO.personIDQuery)
     String getPersonID(@Bind("osuID") String osuID)
 
+    /**
+     * Checks that a term code is valid.
+     * @param term
+     * @return
+     */
+    @SqlQuery(AbstractStudentsDAO.termValidationQuery)
+    boolean isValidTerm(@Bind("term") String term)
+
+    /**
+     * Returns the current term.
+     * @return
+     */
+    @SqlQuery(AbstractStudentsDAO.getCurrentTermQuery)
+    String getCurrentTerm()
+
     @Override
     void close()
 }

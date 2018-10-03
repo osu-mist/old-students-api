@@ -2,26 +2,26 @@ package edu.oregonstate.mist.students
 
 import edu.oregonstate.mist.students.core.Award
 import edu.oregonstate.mist.students.core.WorkStudyObject
+import edu.oregonstate.mist.students.db.StudentNotFoundException
 import edu.oregonstate.mist.students.db.StudentsDAO
 import edu.oregonstate.mist.students.db.StudentsDAOWrapper
 import groovy.mock.interceptor.MockFor
 import org.junit.Test
 
 import static org.junit.Assert.assertEquals
-import static org.junit.Assert.assertNull
 
 class StudentsDAOWrapperTest {
     /**
      * Check that the DAO wrapper returns null if the DAO returns null.
      */
-    @Test
+    @Test(expected = StudentNotFoundException.class)
     void personIDShouldBeNullIfDAOReturnsNull() {
         def mockDAO = getMockDAO()
         mockDAO.demand.getPersonID() { null }
 
         def mockDAOWrapper = new StudentsDAOWrapper(mockDAO.proxyInstance(), null)
 
-        assertNull(mockDAOWrapper.getPersonID("912345678"))
+        mockDAOWrapper.getPersonID("912345678")
     }
 
     /**
@@ -41,6 +41,7 @@ class StudentsDAOWrapperTest {
         )]
 
         def mockDAO = getMockDAO()
+        mockDAO.demand.getPersonID() { "foobar" }
         mockDAO.demand.getWorkStudy() { awards }
         def mockDAOWrapper = new StudentsDAOWrapper(mockDAO.proxyInstance(), null)
         WorkStudyObject workStudy = mockDAOWrapper.getWorkStudy("987654321")

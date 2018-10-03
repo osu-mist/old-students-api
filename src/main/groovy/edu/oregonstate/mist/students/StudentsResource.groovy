@@ -7,8 +7,10 @@ import edu.oregonstate.mist.api.jsonapi.ResultObject
 import edu.oregonstate.mist.students.core.AcademicStatus
 import edu.oregonstate.mist.students.core.AccountBalance
 import edu.oregonstate.mist.students.core.AccountTransactions
+import edu.oregonstate.mist.students.core.DualEnrollment
 import edu.oregonstate.mist.students.core.GPALevels
 import edu.oregonstate.mist.students.core.Grade
+import edu.oregonstate.mist.students.core.WorkStudyObject
 import edu.oregonstate.mist.students.db.InvalidTermException
 import edu.oregonstate.mist.students.db.StudentNotFoundException
 import edu.oregonstate.mist.students.db.StudentsDAOWrapper
@@ -47,15 +49,19 @@ class StudentsResource extends Resource {
     @GET
     @Path ('{osuID: [0-9a-zA-Z-]+}/dual-enrollment')
     Response getDualEnrollment(@PathParam("osuID") String osuID, @QueryParam("term") String term) {
-        String personID = studentsDAOWrapper.getPersonID(osuID)
+        List<DualEnrollment> dualEnrollments
 
-        if (!personID) {
+        try {
+            dualEnrollments = studentsDAOWrapper.getDualEnrollment(osuID, term)
+        } catch (StudentNotFoundException e) {
             return notFound().build()
+        } catch (InvalidTermException e) {
+            return invalidTermResponse()
         }
 
         ResultObject resultObject = new ResultObject(
                 links: getSelfLink(uriBuilder.dualEnrollmentUri(osuID, term)),
-                data: studentsDAOWrapper.getDualEnrollment(personID, term).collect {
+                data: dualEnrollments.collect {
                     new ResourceObject(
                             id: getResourceObjectID(osuID, it.term),
                             type: "dual-enrollment",
@@ -76,9 +82,11 @@ class StudentsResource extends Resource {
     @GET
     @Path ('{osuID: [0-9a-zA-Z-]+}/work-study')
     Response getWorkStudy(@PathParam("osuID") String osuID) {
-        String personID = studentsDAOWrapper.getPersonID(osuID)
+        WorkStudyObject workStudyObject
 
-        if (!personID) {
+        try {
+            workStudyObject = studentsDAOWrapper.getWorkStudy(osuID)
+        } catch (StudentNotFoundException e) {
             return notFound().build()
         }
 
@@ -87,7 +95,7 @@ class StudentsResource extends Resource {
                 data: new ResourceObject(
                         id: osuID,
                         type: "work-study",
-                        attributes: studentsDAOWrapper.getWorkStudy(personID)
+                        attributes: workStudyObject
                 )
         )
 
@@ -231,7 +239,7 @@ class StudentsResource extends Resource {
     }
 
     private String getResourceObjectID(String id, String term) {
-        "$id-$term}"
+        "$id-$term"
     }
 
     private String getResourceObjectID(String id, String term, String courseReferenceNumber) {
