@@ -7,6 +7,7 @@ import edu.oregonstate.mist.students.core.ClassSchedule
 import edu.oregonstate.mist.students.core.DualEnrollment
 import edu.oregonstate.mist.students.core.GPALevels
 import edu.oregonstate.mist.students.core.Grade
+import edu.oregonstate.mist.students.core.Holds
 import edu.oregonstate.mist.students.core.WorkStudyObject
 import groovy.transform.InheritConstructors
 
@@ -81,6 +82,10 @@ class StudentsDAOWrapper {
 
     public List<ClassSchedule> getClassSchedule(String osuID, String term) {
         httpStudentsDAO.getClassSchedule(osuID, getTerm(term))
+    }
+
+    public Holds getHolds(String osuID) {
+        httpStudentsDAO.getHolds(osuID)
     }
 
     private String getTerm(String term) {

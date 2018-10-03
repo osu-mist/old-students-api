@@ -12,6 +12,7 @@ import edu.oregonstate.mist.students.core.AccountTransactions
 import edu.oregonstate.mist.students.core.ClassSchedule
 import edu.oregonstate.mist.students.core.GPALevels
 import edu.oregonstate.mist.students.core.Grade
+import edu.oregonstate.mist.students.core.Holds
 import groovy.transform.InheritConstructors
 import org.apache.http.HttpHeaders
 import org.apache.http.HttpResponse
@@ -38,6 +39,7 @@ class HttpStudentsDAO {
     private final String academicStandingsEndpoint = "gpa-academic-standings"
     private final String gradesEndpoint = "grades"
     private final String classSchedulesEndpoint = "class-schedules"
+    private final String holdsEndpoint = "holds"
 
     private static Logger logger = LoggerFactory.getLogger(this)
 
@@ -121,6 +123,15 @@ class HttpStudentsDAO {
                 new TypeReference<List<BackendClassSchedule>>() {})
 
         classSchedule.collect { ClassSchedule.fromBackendClassSchedule(it) }
+    }
+
+    protected Holds getHolds(String id) {
+        String response = getResponse(getStudentsEndpoint(id, holdsEndpoint))
+
+        List<BackendHold> holds = objectMapper.readValue(response,
+                new TypeReference<List<BackendHold>>() {})
+
+        Holds.fromBackendHolds(holds)
     }
 
     private String getResponse(String endpoint, String term = null) {
@@ -381,4 +392,13 @@ class BackendMeetingTime {
     Boolean thursday
     Boolean friday
     Boolean saturday
+}
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+class BackendHold {
+    LocalDate fromDate
+    LocalDate toDate
+    String holdTypeDescription
+    List<String> processAffectedDescription
+    String reason
 }

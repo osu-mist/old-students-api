@@ -11,6 +11,7 @@ import edu.oregonstate.mist.students.core.ClassSchedule
 import edu.oregonstate.mist.students.core.DualEnrollment
 import edu.oregonstate.mist.students.core.GPALevels
 import edu.oregonstate.mist.students.core.Grade
+import edu.oregonstate.mist.students.core.Holds
 import edu.oregonstate.mist.students.core.WorkStudyObject
 import edu.oregonstate.mist.students.db.InvalidTermException
 import edu.oregonstate.mist.students.db.StudentNotFoundException
@@ -258,6 +259,30 @@ class StudentsResource extends Resource {
                             attributes: it
                     )
                 }
+        )
+
+        ok(resultObject).build()
+    }
+
+    @Timed
+    @GET
+    @Path ('{osuID: [0-9a-zA-Z-]+}/holds')
+    Response getClassSchedule(@PathParam("osuID") String osuID) {
+        Holds holds
+
+        try {
+            holds = studentsDAOWrapper.getHolds(osuID)
+        } catch (StudentNotFoundException e) {
+            return notFound().build()
+        }
+
+        ResultObject resultObject = new ResultObject(
+                links: getSelfLink(uriBuilder.holdsUri(osuID)),
+                data: new ResourceObject(
+                            id: getResourceObjectID(osuID),
+                            type: "holds",
+                            attributes: holds
+                )
         )
 
         ok(resultObject).build()
