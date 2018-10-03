@@ -33,6 +33,10 @@ class StudentsUriBuilder {
         genericUri("academic-status", osuID, term)
     }
 
+    URI gradesUri(String osuID, String term) {
+        genericUri("grades", osuID, term)
+    }
+
     private URI genericUri(String endpoint, String osuID, String term = null) {
         UriBuilder builder = UriBuilder.fromUri(this.endpointUri).path("students/{osuID}/$endpoint")
 

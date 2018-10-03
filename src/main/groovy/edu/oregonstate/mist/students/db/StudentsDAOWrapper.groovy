@@ -5,6 +5,7 @@ import edu.oregonstate.mist.students.core.AccountBalance
 import edu.oregonstate.mist.students.core.AccountTransactions
 import edu.oregonstate.mist.students.core.DualEnrollment
 import edu.oregonstate.mist.students.core.GPALevels
+import edu.oregonstate.mist.students.core.Grade
 import edu.oregonstate.mist.students.core.WorkStudyObject
 import groovy.transform.InheritConstructors
 
@@ -59,6 +60,10 @@ class StudentsDAOWrapper {
 
     public List<AcademicStatus> getAcademicStatus(String osuID, String term) {
         httpStudentsDAO.getAcademicStatus(osuID, term)
+    }
+
+    public List<Grade> getGrades(String osuID, String term) {
+        httpStudentsDAO.getGrades(osuID, term)
     }
 }
 

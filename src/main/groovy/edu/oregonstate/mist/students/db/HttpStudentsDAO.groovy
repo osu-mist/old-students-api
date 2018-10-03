@@ -1,6 +1,7 @@
 package edu.oregonstate.mist.students.db
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
@@ -8,6 +9,7 @@ import edu.oregonstate.mist.students.core.AcademicStatus
 import edu.oregonstate.mist.students.core.AccountBalance
 import edu.oregonstate.mist.students.core.AccountTransactions
 import edu.oregonstate.mist.students.core.GPALevels
+import edu.oregonstate.mist.students.core.Grade
 import groovy.transform.InheritConstructors
 import org.apache.http.HttpHeaders
 import org.apache.http.HttpResponse
@@ -29,6 +31,7 @@ class HttpStudentsDAO {
     private final String accountBalanceEndpoint = "account-balances"
     private final String accountTransactionsEndpoint = "account-transactions"
     private final String academicStandingsEndpoint = "gpa-academic-standings"
+    private final String gradesEndpoint = "grades"
 
     private static Logger logger = LoggerFactory.getLogger(this)
 
@@ -90,6 +93,15 @@ class HttpStudentsDAO {
         }
 
         academicStanding.collect { AcademicStatus.fromBackendAcademicStanding(it) }
+    }
+
+    protected List<Grade> getGrades(String id, String term) {
+        String response = getResponse(getStudentsEndpoint(id, gradesEndpoint), term)
+
+        List<BackendGrade> grades = objectMapper.readValue(
+                response, new TypeReference<List<BackendGrade>>() {})
+
+        grades.collect { Grade.fromBackendGrade(it) }
     }
 
     private String getResponse(String endpoint, String term = null) {
@@ -205,4 +217,64 @@ class BackendAcademicStanding {
     String academicStandingTerm
     String academicStandingTermDescription
     List<BackendGPA> termGPAs
+}
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+class BackendGrade {
+    String crn
+    String gradeFinal
+    String gradeInAcadHistory
+
+    String courseSubject
+    String courseSubjectDescription
+
+    @JsonProperty("subject")
+    private void unpackSubject(Map<String, String> subject) {
+        this.courseSubject = getCode(subject)
+        this.courseSubjectDescription = getDescription(subject)
+    }
+
+    String courseNumber
+    String courseTitle
+    String sequenceNumber
+
+    String term
+    String termDescription
+
+    @JsonProperty("term")
+    private void unpackTerm(Map<String, String> term) {
+        this.term = getCode(term)
+        this.termDescription = getDescription(term)
+    }
+
+    String classFormat
+
+    @JsonProperty("classFormat")
+    private void unpackClassFormat(Map<String, String> classFormat) {
+        this.classFormat = getDescription(classFormat)
+    }
+
+    Integer creditHour
+
+    String registrationStatus
+
+    @JsonProperty("registrationStatus")
+    private void unpackRegistrationStatus(Map<String, String> registrationStatus) {
+        this.registrationStatus = getDescription(registrationStatus)
+    }
+
+    String courseLevel
+
+    @JsonProperty("level")
+    private void unpackCourseLevel(Map<String, String> courseLevel) {
+        this.courseLevel = getDescription(courseLevel)
+    }
+
+    private String getCode(Map<String, String> map) {
+        map.get("code")
+    }
+
+    private String getDescription(Map<String, String> map) {
+        map.get("description")
+    }
 }

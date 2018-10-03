@@ -8,12 +8,11 @@ import edu.oregonstate.mist.students.core.AcademicStatus
 import edu.oregonstate.mist.students.core.AccountBalance
 import edu.oregonstate.mist.students.core.AccountTransactions
 import edu.oregonstate.mist.students.core.GPALevels
+import edu.oregonstate.mist.students.core.Grade
 import edu.oregonstate.mist.students.db.InvalidTermException
 import edu.oregonstate.mist.students.db.StudentNotFoundException
 import edu.oregonstate.mist.students.db.StudentsDAOWrapper
 import groovy.transform.TypeChecked
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 
 import javax.annotation.security.PermitAll
 import javax.ws.rs.GET
@@ -58,7 +57,7 @@ class StudentsResource extends Resource {
                 links: getSelfLink(uriBuilder.dualEnrollmentUri(osuID, term)),
                 data: studentsDAOWrapper.getDualEnrollment(personID, term).collect {
                     new ResourceObject(
-                            id: getStudentAndTermID(osuID, it.term),
+                            id: getResourceObjectID(osuID, it.term),
                             type: "dual-enrollment",
                             attributes: it,
                     )
@@ -185,8 +184,36 @@ class StudentsResource extends Resource {
                 links: getSelfLink(uriBuilder.academicStatusUri(osuID, term)),
                 data: academicStatus.collect {
                     new ResourceObject(
-                            id: getStudentAndTermID(osuID,it.term),
+                            id: getResourceObjectID(osuID, it.term),
                             type: "academic-status",
+                            attributes: it
+                    )
+                }
+        )
+
+        ok(resultObject).build()
+    }
+
+    @Timed
+    @GET
+    @Path ('{osuID: [0-9a-zA-Z-]+}/grades')
+    Response getGrades(@PathParam("osuID") String osuID, @QueryParam("term") String term) {
+        List<Grade> grades
+
+        try {
+            grades = studentsDAOWrapper.getGrades(osuID, term)
+        } catch (StudentNotFoundException e) {
+            return notFound().build()
+        } catch (InvalidTermException e) {
+            return invalidTermResponse()
+        }
+
+        ResultObject resultObject = new ResultObject(
+                links: getSelfLink(uriBuilder.gradesUri(osuID, term)),
+                data: grades.collect {
+                    new ResourceObject(
+                            id: getResourceObjectID(osuID, it.term, it.courseReferenceNumber),
+                            type: "grades",
                             attributes: it
                     )
                 }
@@ -199,8 +226,16 @@ class StudentsResource extends Resource {
         ["self": uri]
     }
 
-    private String getStudentAndTermID(String id, String term) {
-        "${id}-${term}"
+    private String getResourceObjectID(String id) {
+        id
+    }
+
+    private String getResourceObjectID(String id, String term) {
+        "$id-$term}"
+    }
+
+    private String getResourceObjectID(String id, String term, String courseReferenceNumber) {
+        "$id-$term-$courseReferenceNumber"
     }
 
     private Response invalidTermResponse() {
