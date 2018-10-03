@@ -4,12 +4,16 @@ import com.codahale.metrics.annotation.Timed
 import edu.oregonstate.mist.api.Resource
 import edu.oregonstate.mist.api.jsonapi.ResourceObject
 import edu.oregonstate.mist.api.jsonapi.ResultObject
+import edu.oregonstate.mist.students.core.AcademicStatus
 import edu.oregonstate.mist.students.core.AccountBalance
 import edu.oregonstate.mist.students.core.AccountTransactions
 import edu.oregonstate.mist.students.core.GPALevels
+import edu.oregonstate.mist.students.db.InvalidTermException
 import edu.oregonstate.mist.students.db.StudentNotFoundException
 import edu.oregonstate.mist.students.db.StudentsDAOWrapper
 import groovy.transform.TypeChecked
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 import javax.annotation.security.PermitAll
 import javax.ws.rs.GET
@@ -99,7 +103,7 @@ class StudentsResource extends Resource {
 
         try {
             accountBalance = studentsDAOWrapper.getAccountBalance(osuID)
-        } catch (StudentNotFoundException) {
+        } catch (StudentNotFoundException e) {
             return notFound().build()
         }
 
@@ -123,7 +127,7 @@ class StudentsResource extends Resource {
 
         try {
             accountTransactions = studentsDAOWrapper.getAccountTransactions(osuID)
-        } catch (StudentNotFoundException) {
+        } catch (StudentNotFoundException e) {
             return notFound().build()
         }
 
@@ -147,7 +151,7 @@ class StudentsResource extends Resource {
 
         try {
             gpa = studentsDAOWrapper.getGPA(osuID)
-        } catch (StudentNotFoundException) {
+        } catch (StudentNotFoundException e) {
             return notFound().build()
         }
 
@@ -163,11 +167,43 @@ class StudentsResource extends Resource {
         ok(resultObject).build()
     }
 
+    @Timed
+    @GET
+    @Path ('{osuID: [0-9a-zA-Z-]+}/academic-status')
+    Response getAcademicStatus(@PathParam("osuID") String osuID, @QueryParam("term") String term) {
+        List<AcademicStatus> academicStatus
+
+        try {
+            academicStatus = studentsDAOWrapper.getAcademicStatus(osuID, term)
+        } catch (StudentNotFoundException e) {
+            return notFound().build()
+        } catch (InvalidTermException e) {
+            return invalidTermResponse()
+        }
+
+        ResultObject resultObject = new ResultObject(
+                links: getSelfLink(uriBuilder.academicStatusUri(osuID, term)),
+                data: academicStatus.collect {
+                    new ResourceObject(
+                            id: getStudentAndTermID(osuID,it.term),
+                            type: "academic-status",
+                            attributes: it
+                    )
+                }
+        )
+
+        ok(resultObject).build()
+    }
+
     private def getSelfLink(URI uri) {
         ["self": uri]
     }
 
     private String getStudentAndTermID(String id, String term) {
         "${id}-${term}"
+    }
+
+    private Response invalidTermResponse() {
+        badRequest("Term is invalid.").build()
     }
 }

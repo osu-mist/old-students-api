@@ -8,16 +8,7 @@ class GPALevels {
     static GPALevels fromBackendGPA(List<BackendGPA> backendGPAs) {
         new GPALevels(
                 gpaLevels: backendGPAs.collect {
-                    new GPA(
-                            gpa: it.gpa,
-                            gpaCreditHours: it.gpaHours,
-                            gpaType: it.gpaTypeIndicatorDescription,
-                            creditHoursAttempted: it.hoursAttempted,
-                            creditHoursEarned: it.hoursEarned,
-                            creditHoursPassed: it.hoursPassed,
-                            level: it.levelDescription,
-                            qualityPoints: it.qualityPoints
-                    )
+                    GPA.fromBackendGPA(it)
                 }
         )
     }
@@ -32,4 +23,17 @@ class GPA {
     Integer creditHoursPassed
     String level
     String qualityPoints
+
+    static GPA fromBackendGPA(BackendGPA backendGPA) {
+        new GPA(
+                gpa: backendGPA.gpa,
+                gpaCreditHours: backendGPA.gpaHours,
+                gpaType: backendGPA.gpaTypeIndicatorDescription,
+                creditHoursAttempted: backendGPA.hoursAttempted,
+                creditHoursEarned: backendGPA.hoursEarned,
+                creditHoursPassed: backendGPA.hoursPassed,
+                level: backendGPA.levelDescription,
+                qualityPoints: backendGPA.qualityPoints
+        )
+    }
 }

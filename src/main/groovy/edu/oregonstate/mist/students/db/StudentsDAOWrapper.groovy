@@ -1,5 +1,6 @@
 package edu.oregonstate.mist.students.db
 
+import edu.oregonstate.mist.students.core.AcademicStatus
 import edu.oregonstate.mist.students.core.AccountBalance
 import edu.oregonstate.mist.students.core.AccountTransactions
 import edu.oregonstate.mist.students.core.DualEnrollment
@@ -55,7 +56,14 @@ class StudentsDAOWrapper {
     public GPALevels getGPA(String osuID) {
         httpStudentsDAO.getGPA(osuID)
     }
+
+    public List<AcademicStatus> getAcademicStatus(String osuID, String term) {
+        httpStudentsDAO.getAcademicStatus(osuID, term)
+    }
 }
 
 @InheritConstructors
 class StudentNotFoundException extends Exception {}
+
+@InheritConstructors
+class InvalidTermException extends Exception {}
