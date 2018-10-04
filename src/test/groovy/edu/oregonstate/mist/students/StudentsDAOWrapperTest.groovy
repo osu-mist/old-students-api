@@ -3,17 +3,12 @@ package edu.oregonstate.mist.students
 import edu.oregonstate.mist.students.core.AcademicStatus
 import edu.oregonstate.mist.students.core.AccountBalance
 import edu.oregonstate.mist.students.core.AccountTransactions
-import edu.oregonstate.mist.students.core.Award
 import edu.oregonstate.mist.students.core.ClassSchedule
 import edu.oregonstate.mist.students.core.DualEnrollment
-import edu.oregonstate.mist.students.core.Faculty
-import edu.oregonstate.mist.students.core.GPA
 import edu.oregonstate.mist.students.core.GPALevels
 import edu.oregonstate.mist.students.core.Grade
 import edu.oregonstate.mist.students.core.Hold
 import edu.oregonstate.mist.students.core.Holds
-import edu.oregonstate.mist.students.core.MeetingTime
-import edu.oregonstate.mist.students.core.Transaction
 import edu.oregonstate.mist.students.core.WorkStudyObject
 import edu.oregonstate.mist.students.db.HttpStudentsDAO
 import edu.oregonstate.mist.students.db.InvalidTermException
@@ -23,89 +18,13 @@ import edu.oregonstate.mist.students.db.StudentsDAOWrapper
 import groovy.mock.interceptor.MockFor
 import org.junit.Test
 
-import java.time.Instant
 import java.time.LocalDate
-import java.time.LocalTime
 
 import static org.junit.Assert.assertEquals
 
 class StudentsDAOWrapperTest {
     private static final String endpoint = "https://www.example.com"
-    private static final String fakeID = "931234567"
-    private static final GPA fakeGPA = new GPA(
-            gpa: "4.00",
-            gpaCreditHours: 173,
-            gpaType: "Total",
-            creditHoursAttempted: 173,
-            creditHoursEarned: 173,
-            creditHoursPassed: 173,
-            level: "Undergrad",
-            qualityPoints: "233.00"
-    )
-    private static final List<AcademicStatus> fakeAcademicStatus = [new AcademicStatus(
-            academicStanding: "good",
-            term: "201801",
-            termDescription: "Fall 2017",
-            gpa: [fakeGPA]
-    )]
-    private static final List<Grade> fakeGrades = [new Grade(
-            courseReferenceNumber: "23423",
-            gradeFinal: "A",
-            gradeAcademicHistoryFinal: "A",
-            courseSubject: "MTH",
-            courseSubjectDescription: "Math",
-            courseNumber: "101",
-            courseTitle: "Basic math",
-            sectionNumber: "001",
-            term: "201901",
-            termDescription: "Fall 2018",
-            classFormat: "Lecture",
-            creditHours: 4,
-            registrationStatus: "Registered",
-            courseLevel: "Undergrad"
-    )]
-    private static final List<ClassSchedule> fakeSchedule = [new ClassSchedule(
-            academicYear: "1819",
-            academicYearDescription: "2018-2019",
-            courseReferenceNumber: "23423",
-            courseSubject: "MTH",
-            courseSubjectDescription: "Math",
-            courseNumber: "101",
-            courseTitle: "Basic math",
-            sectionNumber: "001",
-            term: "201901",
-            termDescription: "Fall 2018",
-            classFormat: "Lecture",
-            creditHours: 4,
-            registrationStatus: "Registered",
-            gradingMode: "hard",
-            continuingEducation: false,
-            faculty: [new Faculty(
-                    osuID: "933333333",
-                    name: "Professor Chalkboard",
-                    email: "theprofessor@mathdepartment.com",
-                    primary: true
-            )],
-            meetingTimes: [new MeetingTime(
-                    beginDate: LocalDate.now(),
-                    beginTime: LocalTime.now(),
-                    endDate: LocalDate.now(),
-                    endTime: LocalTime.now(),
-                    room: "3",
-                    building: "OLDB",
-                    buildingDescription: "Some old building",
-                    campus: "main campus",
-                    hoursPerWeek: 1.33,
-                    creditHourSession: 4,
-                    meetsSunday: false,
-                    meetsMonday: true,
-                    meetsTuesday: true,
-                    meetsWednesday: true,
-                    meetsThursday: true,
-                    meetsFriday: true,
-                    meetsSaturday: true
-            )]
-    )]
+
     /**
      * Check that the DAO wrapper returns null if the DAO returns null.
      */
@@ -116,7 +35,7 @@ class StudentsDAOWrapperTest {
 
         def daoWrapper = new StudentsDAOWrapper(mockDAO.proxyInstance(), null)
 
-        daoWrapper.getWorkStudy(fakeID)
+        daoWrapper.getWorkStudy(TestHelperObjects.fakeID)
     }
 
     /**
@@ -124,24 +43,13 @@ class StudentsDAOWrapperTest {
      */
     @Test
     void getWorkStudyTest() {
-        List<Award> awards = [new Award(
-                effectiveStartDate: new Date(),
-                effectiveEndDate: new Date(),
-                offerAmount: 2000,
-                offerExpirationDate: new Date(),
-                acceptedAmount: 1500,
-                acceptedDate: new Date(),
-                paidAmount: 1000,
-                awardStatus: "Accepted"
-        )]
-
         def mockDAO = getMockDAO()
         mockDAO.demand.getPersonID() { "foobar" }
-        mockDAO.demand.getWorkStudy() { awards }
+        mockDAO.demand.getWorkStudy() { TestHelperObjects.fakeAwards }
         def mockDAOWrapper = new StudentsDAOWrapper(mockDAO.proxyInstance(), null)
-        WorkStudyObject workStudy = mockDAOWrapper.getWorkStudy(fakeID)
+        WorkStudyObject workStudy = mockDAOWrapper.getWorkStudy(TestHelperObjects.fakeID)
 
-        assertEquals(workStudy.awards, awards)
+        assertEquals(TestHelperObjects.fakeAwards, workStudy.awards)
     }
 
     @Test(expected = StudentNotFoundException.class)
@@ -151,7 +59,7 @@ class StudentsDAOWrapperTest {
 
         def daoWrapper = new StudentsDAOWrapper(mockDAO.proxyInstance(), null)
 
-        daoWrapper.getWorkStudy(fakeID)
+        daoWrapper.getWorkStudy(TestHelperObjects.fakeID)
     }
 
     @Test(expected = InvalidTermException.class)
@@ -161,7 +69,7 @@ class StudentsDAOWrapperTest {
 
         def daoWrapper = new StudentsDAOWrapper(mockDAO.proxyInstance(), null)
 
-        daoWrapper.getDualEnrollment(fakeID, "badTerm")
+        daoWrapper.getDualEnrollment(TestHelperObjects.fakeID, "badTerm")
     }
 
     @Test
@@ -173,7 +81,7 @@ class StudentsDAOWrapperTest {
 
         mockDAO.demand.getCurrentTerm() { currentTerm }
         mockDAO.demand.isValidTerm() { true }
-        mockDAO.demand.getPersonID() { fakeID }
+        mockDAO.demand.getPersonID() { TestHelperObjects.fakeID }
         mockDAO.demand.getDualEnrollment() { String id, String term ->
             termUsedInCall = term
             [new DualEnrollment()]
@@ -182,60 +90,49 @@ class StudentsDAOWrapperTest {
 
         def daoWrapper = new StudentsDAOWrapper(mockDAO.proxyInstance(), null)
 
-        daoWrapper.getDualEnrollment(fakeID, "current")
+        daoWrapper.getDualEnrollment(TestHelperObjects.fakeID, "current")
 
         assertEquals(termUsedInCall, currentTerm)
     }
 
     @Test
     void testAccountBalance() {
-        AccountBalance accountBalance = new AccountBalance(currentBalance: 123.45)
-
         def mockHttpDAO = getMockHttpDAO()
 
-        mockHttpDAO.demand.getAccountBalance() { accountBalance }
+        mockHttpDAO.demand.getAccountBalance() { TestHelperObjects.fakeAccountBalance }
 
         mockHttpDAO.use {
             def daoWrapper = getStudentsDAOWrapperWithHttpDAO()
-            AccountBalance accountBalanceFromDAOWrapper = daoWrapper.getAccountBalance(fakeID)
-            assertEquals(accountBalance, accountBalanceFromDAOWrapper)
+            AccountBalance accountBalanceFromDAOWrapper = daoWrapper.getAccountBalance(
+                    TestHelperObjects.fakeID)
+            assertEquals(TestHelperObjects.fakeAccountBalance, accountBalanceFromDAOWrapper)
         }
     }
 
     @Test
     void testAccountTransactions() {
-        AccountTransactions accountTransactions = new AccountTransactions(
-                transactions: [new Transaction(
-                        amount: 32423.33,
-                        description: "Some payment.",
-                        entryDate: Instant.now()
-                )]
-        )
-
         def mockHttpDAO = getMockHttpDAO()
 
-        mockHttpDAO.demand.getAccountTransactions() { accountTransactions }
+        mockHttpDAO.demand.getAccountTransactions() { TestHelperObjects.fakeAccountTransactions }
 
         mockHttpDAO.use {
             def daoWrapper = getStudentsDAOWrapperWithHttpDAO()
             AccountTransactions transactionsFromDAOWrapper =
-                    daoWrapper.getAccountTransactions(fakeID)
-            assertEquals(accountTransactions, transactionsFromDAOWrapper)
+                    daoWrapper.getAccountTransactions(TestHelperObjects.fakeID)
+            assertEquals(TestHelperObjects.fakeAccountTransactions, transactionsFromDAOWrapper)
         }
     }
 
     @Test
     void testGPA() {
-        GPALevels gpaLevels = new GPALevels(gpaLevels: [fakeGPA])
-
         def mockHttpDAO = getMockHttpDAO()
 
-        mockHttpDAO.demand.getGPA() { gpaLevels }
+        mockHttpDAO.demand.getGPA() { TestHelperObjects.fakeGPALevels }
 
         mockHttpDAO.use {
             def daoWrapper = getStudentsDAOWrapperWithHttpDAO()
-            GPALevels gpaLevelsFromDAOWrapper = daoWrapper.getGPA(fakeID)
-            assertEquals(gpaLevels, gpaLevelsFromDAOWrapper)
+            GPALevels gpaLevelsFromDAOWrapper = daoWrapper.getGPA(TestHelperObjects.fakeID)
+            assertEquals(TestHelperObjects.fakeGPALevels, gpaLevelsFromDAOWrapper)
         }
     }
 
@@ -244,14 +141,14 @@ class StudentsDAOWrapperTest {
         def mockHttpDAO = getMockHttpDAO()
 
         mockHttpDAO.demand.getAcademicStatus() { String osuID, String term ->
-            fakeAcademicStatus
+            TestHelperObjects.fakeAcademicStatus
         }
 
         mockHttpDAO.use {
             def daoWrapper = getStudentsDAOWrapperWithHttpDAO()
             List<AcademicStatus> academicStatusFromDAOWrapper = daoWrapper.getAcademicStatus(
-                    fakeID, "201801")
-            assertEquals(fakeAcademicStatus, academicStatusFromDAOWrapper)
+                    TestHelperObjects.fakeID, "201801")
+            assertEquals(TestHelperObjects.fakeAcademicStatus, academicStatusFromDAOWrapper)
         }
     }
 
@@ -264,7 +161,7 @@ class StudentsDAOWrapperTest {
 
         mockHttpDAO.demand.getAcademicStatus() { String osuID, String term ->
             termUsedInCall = term
-            fakeAcademicStatus
+            TestHelperObjects.fakeAcademicStatus
         }
 
         def mockDAO = getMockDAO()
@@ -274,8 +171,8 @@ class StudentsDAOWrapperTest {
         mockHttpDAO.use {
             def daoWrapper = getStudentsDAOWrapperWithHttpDAO(mockDAO)
             List<AcademicStatus> academicStatusFromDAOWrapper = daoWrapper.getAcademicStatus(
-                    fakeID, "current")
-            assertEquals(fakeAcademicStatus, academicStatusFromDAOWrapper)
+                    TestHelperObjects.fakeID, "current")
+            assertEquals(TestHelperObjects.fakeAcademicStatus, academicStatusFromDAOWrapper)
             assertEquals(currentTerm, termUsedInCall)
         }
     }
@@ -285,13 +182,14 @@ class StudentsDAOWrapperTest {
         def mockHttpDAO = getMockHttpDAO()
 
         mockHttpDAO.demand.getGrades() {String osuID, String term ->
-            fakeGrades
+            TestHelperObjects.fakeGrades
         }
 
         mockHttpDAO.use {
             def daoWrapper = getStudentsDAOWrapperWithHttpDAO()
-            List<Grade> gradesFromDAOWrapper = daoWrapper.getGrades(fakeID, "201901")
-            assertEquals(fakeGrades, gradesFromDAOWrapper)
+            List<Grade> gradesFromDAOWrapper = daoWrapper.getGrades(
+                    TestHelperObjects.fakeID, "201901")
+            assertEquals(TestHelperObjects.fakeGrades, gradesFromDAOWrapper)
         }
     }
 
@@ -304,7 +202,7 @@ class StudentsDAOWrapperTest {
 
         mockHttpDAO.demand.getGrades() { String osuID, String term ->
             termUsedInCall = term
-            fakeGrades
+            TestHelperObjects.fakeGrades
         }
 
         def mockDAO = getMockDAO()
@@ -313,8 +211,9 @@ class StudentsDAOWrapperTest {
 
         mockHttpDAO.use {
             def daoWrapper = getStudentsDAOWrapperWithHttpDAO(mockDAO)
-            List<Grade> gradesFromDAOWrapper = daoWrapper.getGrades(fakeID, "current")
-            assertEquals(fakeGrades, gradesFromDAOWrapper)
+            List<Grade> gradesFromDAOWrapper = daoWrapper.getGrades(
+                    TestHelperObjects.fakeID, "current")
+            assertEquals(TestHelperObjects.fakeGrades, gradesFromDAOWrapper)
             assertEquals(currentTerm, termUsedInCall)
         }
     }
@@ -324,14 +223,14 @@ class StudentsDAOWrapperTest {
         def mockHttpDAO = getMockHttpDAO()
 
         mockHttpDAO.demand.getClassSchedule() { String osuID, String term->
-            fakeSchedule
+            TestHelperObjects.fakeSchedule
         }
 
         mockHttpDAO.use {
             def daoWrapper = getStudentsDAOWrapperWithHttpDAO()
             List<ClassSchedule> classScheduleFromDAOWrapper = daoWrapper.getClassSchedule(
-                    fakeID, "201801")
-            assertEquals(fakeSchedule, classScheduleFromDAOWrapper)
+                    TestHelperObjects.fakeID, "201801")
+            assertEquals(TestHelperObjects.fakeSchedule, classScheduleFromDAOWrapper)
         }
     }
 
@@ -344,7 +243,7 @@ class StudentsDAOWrapperTest {
 
         mockHttpDAO.demand.getClassSchedule() { String osuID, String term ->
             termUsedInCall = term
-            fakeSchedule
+            TestHelperObjects.fakeSchedule
         }
 
         def mockDAO = getMockDAO()
@@ -353,8 +252,9 @@ class StudentsDAOWrapperTest {
 
         mockHttpDAO.use {
             def daoWrapper = getStudentsDAOWrapperWithHttpDAO(mockDAO)
-            List<ClassSchedule> classScheduleFromDAOWrapper = daoWrapper.getClassSchedule(fakeID, "current")
-            assertEquals(fakeSchedule, classScheduleFromDAOWrapper)
+            List<ClassSchedule> classScheduleFromDAOWrapper = daoWrapper.getClassSchedule(
+                    TestHelperObjects.fakeID, "current")
+            assertEquals(TestHelperObjects.fakeSchedule, classScheduleFromDAOWrapper)
             assertEquals(currentTerm, termUsedInCall)
         }
     }
@@ -377,7 +277,7 @@ class StudentsDAOWrapperTest {
 
         mockHttpDAO.use {
             def daoWrapper = getStudentsDAOWrapperWithHttpDAO()
-            Holds holdsFromDAOWrapper = daoWrapper.getHolds(fakeID)
+            Holds holdsFromDAOWrapper = daoWrapper.getHolds(TestHelperObjects.fakeID)
             assertEquals(holds, holdsFromDAOWrapper)
         }
     }
@@ -386,10 +286,9 @@ class StudentsDAOWrapperTest {
         HttpStudentsDAO httpStudentsDAO = new HttpStudentsDAO(null, endpoint)
 
         if (mockDAO) {
-            def daoWrapper = new StudentsDAOWrapper(
-                    mockDAO.proxyInstance(), httpStudentsDAO)
+            new StudentsDAOWrapper(mockDAO.proxyInstance(), httpStudentsDAO)
         } else {
-            def daoWrapper = new StudentsDAOWrapper(null, httpStudentsDAO)
+            new StudentsDAOWrapper(null, httpStudentsDAO)
         }
     }
 

@@ -2,9 +2,10 @@ package edu.oregonstate.mist.students
 
 import edu.oregonstate.mist.api.ErrorResultObject
 import edu.oregonstate.mist.api.jsonapi.ResultObject
-import edu.oregonstate.mist.students.core.Award
 import edu.oregonstate.mist.students.core.DualEnrollment
 import edu.oregonstate.mist.students.core.WorkStudyObject
+import edu.oregonstate.mist.students.db.InvalidTermException
+import edu.oregonstate.mist.students.db.StudentNotFoundException
 import edu.oregonstate.mist.students.db.StudentsDAOWrapper
 import groovy.mock.interceptor.MockFor
 import org.junit.Test
@@ -12,45 +13,43 @@ import org.junit.Test
 import javax.ws.rs.core.Response
 
 import static org.junit.Assert.assertEquals
+import static org.junit.Assert.assertTrue
 import static org.junit.Assert.assertNotNull
 
 class StudentsResourceTest {
     private final URI endpointUri = new URI("https://www.foo.com/")
 
-    /**
-     * Check that the resource returns a 404 if MockDAOWrapper.getPersonID() returns null.
-     */
-    //@Test
-    void badOsuIDShouldReturnNotFound() {
-        def mockDAOWrapper = new MockFor(StudentsDAOWrapper)
-        mockDAOWrapper.demand.getPersonID(2..2) { null }
-        def studentsResource = new StudentsResource(mockDAOWrapper.proxyInstance(), endpointUri)
-        checkErrorResponse(studentsResource.getDualEnrollment("1234", "201801"), 404, null)
-        checkErrorResponse(studentsResource.getWorkStudy("1234"), 404, null)
-    }
+    @Test
+    void badOsuIDShouldReturnNotFoundDualEnrollment() {
+        def mockDAOWrapper = getMockDAOWrapper()
 
-    /**
-     * Helper method to check an error response.
-     * @param response
-     * @param expectedResponseCode
-     * @param expectedDeveloperMessage
-     */
-    private void checkErrorResponse(Response response,
-                                    Integer expectedResponseCode,
-                                    String expectedDeveloperMessage) {
-        assertNotNull(response)
-        assertEquals(response.status, expectedResponseCode)
-        assertEquals(response.getEntity().class, ErrorResultObject.class)
+        mockDAOWrapper.demand.getDualEnrollment() { String osuID, String term ->
+            throw new StudentNotFoundException()
+        }
 
-        if (expectedDeveloperMessage) {
-            assertEquals(response.getEntity()["developerMessage"], expectedDeveloperMessage)
+        mockDAOWrapper.use {
+            StudentsResource studentsResource = getStudentsResource()
+            checkErrorResponse(studentsResource.getDualEnrollment(
+                    TestHelperObjects.fakeID, "201801"), 404, null)
         }
     }
 
-    /**
-     * Check that a good request returns a good response.
-     */
-    //@Test
+    @Test
+    void badTermShouldReturnBadRequestDualEnrollment() {
+        def mockDAOWrapper = getMockDAOWrapper()
+
+        mockDAOWrapper.demand.getDualEnrollment() { String osuID, String term ->
+            throw new InvalidTermException()
+        }
+
+        mockDAOWrapper.use {
+            StudentsResource studentsResource = getStudentsResource()
+            checkErrorResponse(studentsResource.getDualEnrollment(
+                    TestHelperObjects.fakeID, "201801"), 400, null)
+        }
+    }
+
+    @Test
     void testValidDualEnrollmentResponse() {
         def mockDAOWrapper = getMockDAOWrapper()
 
@@ -63,35 +62,184 @@ class StudentsResourceTest {
 
         mockDAOWrapper.demand.getDualEnrollment() { String id, String term -> [testDualEnrollment] }
 
-        def studentsResource = new StudentsResource(mockDAOWrapper.proxyInstance(), endpointUri)
-        Response response = studentsResource.getDualEnrollment("912345678", testTerm)
-
-        responseChecker(response, testDualEnrollment)
+        mockDAOWrapper.use {
+            StudentsResource studentsResource = getStudentsResource()
+            Response response = studentsResource.getDualEnrollment(
+                    TestHelperObjects.fakeID, testTerm)
+            responseChecker(response, testDualEnrollment)
+        }
     }
 
-    //@Test
+    @Test
+    void badOsuIDShouldReturnNotFoundWorkStudy() {
+        def mockDAOWrapper = new MockFor(StudentsDAOWrapper)
+
+        mockDAOWrapper.demand.getWorkStudy() { throw new StudentNotFoundException() }
+
+        mockDAOWrapper.use {
+            StudentsResource studentsResource = getStudentsResource()
+            checkErrorResponse(studentsResource.getWorkStudy(TestHelperObjects.fakeID), 404, null)
+        }
+    }
+
+    @Test
     void testValidWorkStudyResponse() {
         def mockDAOWrapper = getMockDAOWrapper()
 
-        WorkStudyObject workStudyObject = new WorkStudyObject(awards: [new Award(
-                effectiveStartDate: new Date(),
-                effectiveEndDate: new Date(),
-                offerAmount: 2000,
-                offerExpirationDate: new Date(),
-                acceptedAmount: 1500,
-                acceptedDate: new Date(),
-                paidAmount: 1000,
-                awardStatus: "Accepted"
-        )])
+        WorkStudyObject workStudyObject = new WorkStudyObject(awards: TestHelperObjects.fakeAwards)
 
         mockDAOWrapper.demand.getWorkStudy() { workStudyObject }
 
-        mockDAOWrapper.proxyInstance()
+        mockDAOWrapper.use {
+            StudentsResource studentsResource = getStudentsResource()
+            Response response = studentsResource.getWorkStudy(TestHelperObjects.fakeID)
+            responseChecker(response, workStudyObject)
+        }
+    }
 
-        def studentsResource = new StudentsResource(mockDAOWrapper.proxyInstance(), endpointUri)
-        Response response = studentsResource.getWorkStudy("912345642")
+    @Test
+    void badOsuIDShouldReturnNotFoundAccountBalance() {
+        def mockDAOWrapper = new MockFor(StudentsDAOWrapper)
 
-        responseChecker(response, workStudyObject)
+        mockDAOWrapper.demand.getAccountBalance() { throw new StudentNotFoundException() }
+
+        mockDAOWrapper.use {
+            StudentsResource studentsResource = getStudentsResource()
+            checkErrorResponse(studentsResource.getAccountBalance(
+                    TestHelperObjects.fakeID), 404, null)
+        }
+    }
+
+    @Test
+    void testValidAccountBalanceResponse() {
+        def mockDAOWrapper = getMockDAOWrapper()
+
+        mockDAOWrapper.demand.getAccountBalance() { TestHelperObjects.fakeAccountBalance }
+
+        mockDAOWrapper.use {
+            StudentsResource studentsResource = getStudentsResource()
+            Response response = studentsResource.getAccountBalance(TestHelperObjects.fakeID)
+            responseChecker(response, TestHelperObjects.fakeAccountBalance)
+        }
+    }
+
+    @Test
+    void badOsuIDShouldReturnNotFoundAccountTransactions() {
+        def mockDAOWrapper = new MockFor(StudentsDAOWrapper)
+
+        mockDAOWrapper.demand.getAccountTransactions() { throw new StudentNotFoundException() }
+
+        mockDAOWrapper.use {
+            StudentsResource studentsResource = getStudentsResource()
+            checkErrorResponse(studentsResource.getAccountTransactions(
+                    TestHelperObjects.fakeID), 404, null)
+        }
+    }
+
+    @Test
+    void testValidAccountTransactionsResponse() {
+        def mockDAOWrapper = getMockDAOWrapper()
+
+        mockDAOWrapper.demand.getAccountTransactions() { TestHelperObjects.fakeAccountTransactions }
+
+        mockDAOWrapper.use {
+            StudentsResource studentsResource = getStudentsResource()
+            Response response = studentsResource.getAccountTransactions(TestHelperObjects.fakeID)
+            responseChecker(response, TestHelperObjects.fakeAccountTransactions)
+        }
+    }
+
+    @Test
+    void badOsuIDShouldReturnNotFoundGPA() {
+        def mockDAOWrapper = new MockFor(StudentsDAOWrapper)
+
+        mockDAOWrapper.demand.getGPA() { throw new StudentNotFoundException() }
+
+        mockDAOWrapper.use {
+            StudentsResource studentsResource = getStudentsResource()
+            checkErrorResponse(studentsResource.getGPA(
+                    TestHelperObjects.fakeID), 404, null)
+        }
+    }
+
+    @Test
+    void testGPAResponse() {
+        def mockDAOWrapper = getMockDAOWrapper()
+
+        mockDAOWrapper.demand.getGPA() { TestHelperObjects.fakeGPALevels }
+
+        mockDAOWrapper.use {
+            StudentsResource studentsResource = getStudentsResource()
+            Response response = studentsResource.getGPA(TestHelperObjects.fakeID)
+            responseChecker(response, TestHelperObjects.fakeGPALevels)
+        }
+    }
+
+    @Test
+    void badOsuIDShouldReturnNotFoundAcademicStatus() {
+        def mockDAOWrapper = getMockDAOWrapper()
+
+        mockDAOWrapper.demand.getAcademicStatus() { String osuID, String term ->
+            throw new StudentNotFoundException()
+        }
+
+        mockDAOWrapper.use {
+            StudentsResource studentsResource = getStudentsResource()
+            checkErrorResponse(studentsResource.getAcademicStatus(
+                    TestHelperObjects.fakeID, "201801"), 404, null)
+        }
+    }
+
+    @Test
+    void badTermShouldReturnBadRequestAcademicStatus() {
+        def mockDAOWrapper = getMockDAOWrapper()
+
+        mockDAOWrapper.demand.getAcademicStatus() { String osuID, String term ->
+            throw new InvalidTermException()
+        }
+
+        mockDAOWrapper.use {
+            StudentsResource studentsResource = getStudentsResource()
+            checkErrorResponse(studentsResource.getAcademicStatus(
+                    TestHelperObjects.fakeID, "201801"), 400, "Term is invalid.")
+        }
+    }
+
+    @Test
+    void testValidAcademicStatusResponse() {
+        def mockDAOWrapper = getMockDAOWrapper()
+
+        String testTerm = "201801"
+
+        mockDAOWrapper.demand.getAcademicStatus() { String id, String term ->
+            TestHelperObjects.fakeAcademicStatus
+        }
+
+        mockDAOWrapper.use {
+            StudentsResource studentsResource = getStudentsResource()
+            Response response = studentsResource.getAcademicStatus(
+                    TestHelperObjects.fakeID, testTerm)
+            responseChecker(response, TestHelperObjects.fakeAcademicStatus[0])
+        }
+    }
+
+    /**
+     * Helper method to check an error response.
+     * @param response
+     * @param expectedResponseCode
+     * @param expectedDeveloperMessage
+     */
+    private void checkErrorResponse(Response response,
+                                    Integer expectedResponseCode,
+                                    String expectedErrorMessage) {
+        assertNotNull(response)
+        assertEquals(response.status, expectedResponseCode)
+        assertEquals(response.getEntity().class, ErrorResultObject.class)
+
+        if (expectedErrorMessage) {
+            List<String> errorMessages = response.getEntity()["errors"].collect { it["detail"] }
+            assertTrue(errorMessages.contains(expectedErrorMessage))
+        }
     }
 
     /**
@@ -115,8 +263,9 @@ class StudentsResourceTest {
 
     private MockFor getMockDAOWrapper() {
         def mockDAOWrapper = new MockFor(StudentsDAOWrapper)
-        mockDAOWrapper.demand.getPersonID() { "123456" }
+    }
 
-        mockDAOWrapper
+    private StudentsResource getStudentsResource() {
+        new StudentsResource(new StudentsDAOWrapper(null, null), endpointUri)
     }
 }
