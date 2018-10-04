@@ -267,7 +267,7 @@ class StudentsResource extends Resource {
     @Timed
     @GET
     @Path ('{osuID: [0-9a-zA-Z-]+}/holds')
-    Response getClassSchedule(@PathParam("osuID") String osuID) {
+    Response getHolds(@PathParam("osuID") String osuID) {
         Holds holds
 
         try {

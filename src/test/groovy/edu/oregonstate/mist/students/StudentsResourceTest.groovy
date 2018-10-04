@@ -2,7 +2,9 @@ package edu.oregonstate.mist.students
 
 import edu.oregonstate.mist.api.ErrorResultObject
 import edu.oregonstate.mist.api.jsonapi.ResultObject
+import edu.oregonstate.mist.students.core.ClassSchedule
 import edu.oregonstate.mist.students.core.DualEnrollment
+import edu.oregonstate.mist.students.core.Grade
 import edu.oregonstate.mist.students.core.WorkStudyObject
 import edu.oregonstate.mist.students.db.InvalidTermException
 import edu.oregonstate.mist.students.db.StudentNotFoundException
@@ -18,6 +20,7 @@ import static org.junit.Assert.assertNotNull
 
 class StudentsResourceTest {
     private final URI endpointUri = new URI("https://www.foo.com/")
+    private final String invalidTermErrorMessage = "Term is invalid."
 
     @Test
     void badOsuIDShouldReturnNotFoundDualEnrollment() {
@@ -45,7 +48,7 @@ class StudentsResourceTest {
         mockDAOWrapper.use {
             StudentsResource studentsResource = getStudentsResource()
             checkErrorResponse(studentsResource.getDualEnrollment(
-                    TestHelperObjects.fakeID, "201801"), 400, null)
+                    TestHelperObjects.fakeID, "201801"), 400, invalidTermErrorMessage)
         }
     }
 
@@ -66,7 +69,8 @@ class StudentsResourceTest {
             StudentsResource studentsResource = getStudentsResource()
             Response response = studentsResource.getDualEnrollment(
                     TestHelperObjects.fakeID, testTerm)
-            responseChecker(response, testDualEnrollment)
+            responseChecker(response, testDualEnrollment,
+                    "${TestHelperObjects.fakeID}-$testTerm", "dual-enrollment")
         }
     }
 
@@ -93,7 +97,7 @@ class StudentsResourceTest {
         mockDAOWrapper.use {
             StudentsResource studentsResource = getStudentsResource()
             Response response = studentsResource.getWorkStudy(TestHelperObjects.fakeID)
-            responseChecker(response, workStudyObject)
+            responseChecker(response, workStudyObject, TestHelperObjects.fakeID, "work-study")
         }
     }
 
@@ -119,7 +123,8 @@ class StudentsResourceTest {
         mockDAOWrapper.use {
             StudentsResource studentsResource = getStudentsResource()
             Response response = studentsResource.getAccountBalance(TestHelperObjects.fakeID)
-            responseChecker(response, TestHelperObjects.fakeAccountBalance)
+            responseChecker(response, TestHelperObjects.fakeAccountBalance,
+                    TestHelperObjects.fakeID, "account-balance")
         }
     }
 
@@ -145,7 +150,8 @@ class StudentsResourceTest {
         mockDAOWrapper.use {
             StudentsResource studentsResource = getStudentsResource()
             Response response = studentsResource.getAccountTransactions(TestHelperObjects.fakeID)
-            responseChecker(response, TestHelperObjects.fakeAccountTransactions)
+            responseChecker(response, TestHelperObjects.fakeAccountTransactions,
+                    TestHelperObjects.fakeID, "account-transactions")
         }
     }
 
@@ -171,7 +177,8 @@ class StudentsResourceTest {
         mockDAOWrapper.use {
             StudentsResource studentsResource = getStudentsResource()
             Response response = studentsResource.getGPA(TestHelperObjects.fakeID)
-            responseChecker(response, TestHelperObjects.fakeGPALevels)
+            responseChecker(response, TestHelperObjects.fakeGPALevels,
+                    TestHelperObjects.fakeID, "gpa")
         }
     }
 
@@ -201,7 +208,7 @@ class StudentsResourceTest {
         mockDAOWrapper.use {
             StudentsResource studentsResource = getStudentsResource()
             checkErrorResponse(studentsResource.getAcademicStatus(
-                    TestHelperObjects.fakeID, "201801"), 400, "Term is invalid.")
+                    TestHelperObjects.fakeID, "201801"), 400, invalidTermErrorMessage)
         }
     }
 
@@ -219,7 +226,148 @@ class StudentsResourceTest {
             StudentsResource studentsResource = getStudentsResource()
             Response response = studentsResource.getAcademicStatus(
                     TestHelperObjects.fakeID, testTerm)
-            responseChecker(response, TestHelperObjects.fakeAcademicStatus[0])
+            responseChecker(response, TestHelperObjects.fakeAcademicStatus[0],
+                    "${TestHelperObjects.fakeID}-$testTerm", "academic-status")
+        }
+    }
+
+    @Test
+    void badOsuIDShouldReturnNotFoundGrades() {
+        def mockDAOWrapper = getMockDAOWrapper()
+
+        mockDAOWrapper.demand.getGrades() { String osuID, String term ->
+            throw new StudentNotFoundException()
+        }
+
+        mockDAOWrapper.use {
+            StudentsResource studentsResource = getStudentsResource()
+            checkErrorResponse(studentsResource.getGrades(
+                    TestHelperObjects.fakeID, "201801"), 404, null)
+        }
+    }
+
+    @Test
+    void badTermShouldReturnBadRequestGrades() {
+        def mockDAOWrapper = getMockDAOWrapper()
+
+        mockDAOWrapper.demand.getGrades() { String osuID, String term ->
+            throw new InvalidTermException()
+        }
+
+        mockDAOWrapper.use {
+            StudentsResource studentsResource = getStudentsResource()
+            checkErrorResponse(studentsResource.getGrades(
+                    TestHelperObjects.fakeID, "201801"), 400, invalidTermErrorMessage)
+        }
+    }
+
+    @Test
+    void testValidGradesResponse() {
+        def mockDAOWrapper = getMockDAOWrapper()
+
+        String testTerm = "201801"
+
+        mockDAOWrapper.demand.getGrades() { String id, String term ->
+            TestHelperObjects.fakeGrades
+        }
+
+        mockDAOWrapper.use {
+            StudentsResource studentsResource = getStudentsResource()
+            Response response = studentsResource.getGrades(
+                    TestHelperObjects.fakeID, testTerm)
+
+            Grade grade = TestHelperObjects.fakeGrades[0]
+            String expectedID = "${TestHelperObjects.fakeID}-${grade.term}" +
+                    "-${grade.courseReferenceNumber}"
+
+            responseChecker(response, grade, expectedID, "grades")
+        }
+    }
+
+    @Test
+    void badOsuIDShouldReturnNotFoundClassSchedule() {
+        def mockDAOWrapper = getMockDAOWrapper()
+
+        mockDAOWrapper.demand.getClassSchedule() { String osuID, String term ->
+            throw new StudentNotFoundException()
+        }
+
+        mockDAOWrapper.use {
+            StudentsResource studentsResource = getStudentsResource()
+            checkErrorResponse(studentsResource.getClassSchedule(
+                    TestHelperObjects.fakeID, "201801"), 404, null)
+        }
+    }
+
+    @Test
+    void badTermShouldReturnBadRequestClassSchedule() {
+        def mockDAOWrapper = getMockDAOWrapper()
+
+        mockDAOWrapper.demand.getClassSchedule() { String osuID, String term ->
+            throw new InvalidTermException()
+        }
+
+        mockDAOWrapper.use {
+            StudentsResource studentsResource = getStudentsResource()
+            checkErrorResponse(studentsResource.getClassSchedule(
+                    TestHelperObjects.fakeID, "201801"), 400, invalidTermErrorMessage)
+        }
+    }
+
+    @Test
+    void noTermShouldReturnBadRequestClassSchedule() {
+        StudentsResource studentsResource = getStudentsResource()
+        checkErrorResponse(studentsResource.getClassSchedule(
+                TestHelperObjects.fakeID, null), 400, "Term (query parameter) is required.")
+    }
+
+    @Test
+    void testValidClassScheduleResponse() {
+        def mockDAOWrapper = getMockDAOWrapper()
+
+        String testTerm = "201801"
+
+        mockDAOWrapper.demand.getClassSchedule() { String id, String term ->
+            TestHelperObjects.fakeSchedule
+        }
+
+        mockDAOWrapper.use {
+            StudentsResource studentsResource = getStudentsResource()
+            Response response = studentsResource.getClassSchedule(
+                    TestHelperObjects.fakeID, testTerm)
+
+            ClassSchedule schedule = TestHelperObjects.fakeSchedule[0]
+            String expectedID = "${TestHelperObjects.fakeID}-${schedule.term}" +
+                    "-${schedule.courseReferenceNumber}"
+
+            responseChecker(response, schedule, expectedID, "class-schedule")
+        }
+    }
+
+    @Test
+    void badOsuIDShouldReturnNotFoundHolds() {
+        def mockDAOWrapper = new MockFor(StudentsDAOWrapper)
+
+        mockDAOWrapper.demand.getHolds() { throw new StudentNotFoundException() }
+
+        mockDAOWrapper.use {
+            StudentsResource studentsResource = getStudentsResource()
+            checkErrorResponse(studentsResource.getHolds(
+                    TestHelperObjects.fakeID), 404, null)
+        }
+    }
+
+    @Test
+    void testValidHoldsResponse() {
+        def mockDAOWrapper = getMockDAOWrapper()
+
+        mockDAOWrapper.demand.getHolds() { TestHelperObjects.fakeHolds }
+
+        mockDAOWrapper.use {
+            StudentsResource studentsResource = getStudentsResource()
+            Response response = studentsResource.getHolds(TestHelperObjects.fakeID)
+            responseChecker(response, TestHelperObjects.fakeHolds,
+                    TestHelperObjects.fakeID, "holds")
         }
     }
 
@@ -247,18 +395,27 @@ class StudentsResourceTest {
      * @param response
      * @param expectedData
      */
-    private void responseChecker(Response response, def expectedData) {
+    private void responseChecker(Response response,
+                                 def expectedData,
+                                 String expectedID,
+                                 String expectedType) {
         assertNotNull(response)
         assertEquals(response.status, 200)
         assertEquals(response.getEntity().class, ResultObject.class)
 
         def responseData = response.getEntity()["data"]
 
+        def resourceObject
+
         if (responseData instanceof List) {
-            assertEquals(responseData[0]["attributes"], expectedData)
+            resourceObject = responseData[0]
         } else {
-            assertEquals(responseData["attributes"], expectedData)
+            resourceObject = responseData
         }
+
+        assertEquals(resourceObject["attributes"], expectedData)
+        assertEquals(resourceObject["id"], expectedID)
+        assertEquals(resourceObject["type"], expectedType)
     }
 
     private MockFor getMockDAOWrapper() {

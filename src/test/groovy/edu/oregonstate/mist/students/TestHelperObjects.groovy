@@ -9,6 +9,8 @@ import edu.oregonstate.mist.students.core.Faculty
 import edu.oregonstate.mist.students.core.GPA
 import edu.oregonstate.mist.students.core.GPALevels
 import edu.oregonstate.mist.students.core.Grade
+import edu.oregonstate.mist.students.core.Hold
+import edu.oregonstate.mist.students.core.Holds
 import edu.oregonstate.mist.students.core.MeetingTime
 import edu.oregonstate.mist.students.core.Transaction
 
@@ -39,6 +41,16 @@ class TestHelperObjects {
             paidAmount: 1000,
             awardStatus: "Accepted"
     )]
+
+    static final Holds fakeHolds = new Holds(
+            holds: [new Hold(
+                    fromDate: LocalDate.now(),
+                    toDate: LocalDate.now().plusDays(1),
+                    description: "Tuition",
+                    processesAffected: ["Graduation"],
+                    reason: "Never paid tuition!"
+            )]
+    )
 
     static final fakeGPALevels = new GPALevels(gpaLevels: [fakeGPA])
 

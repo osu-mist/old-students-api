@@ -87,7 +87,6 @@ class StudentsDAOWrapperTest {
             [new DualEnrollment()]
         }
 
-
         def daoWrapper = new StudentsDAOWrapper(mockDAO.proxyInstance(), null)
 
         daoWrapper.getDualEnrollment(TestHelperObjects.fakeID, "current")
@@ -261,24 +260,14 @@ class StudentsDAOWrapperTest {
 
     @Test
     void testHolds() {
-        Holds holds = new Holds(
-                holds: [new Hold(
-                        fromDate: LocalDate.now(),
-                        toDate: LocalDate.now().plusDays(1),
-                        description: "Tuition",
-                        processesAffected: ["Graduation"],
-                        reason: "Never paid tuition!"
-                )]
-        )
-
         def mockHttpDAO = getMockHttpDAO()
 
-        mockHttpDAO.demand.getHolds() { holds }
+        mockHttpDAO.demand.getHolds() { TestHelperObjects.fakeHolds }
 
         mockHttpDAO.use {
             def daoWrapper = getStudentsDAOWrapperWithHttpDAO()
             Holds holdsFromDAOWrapper = daoWrapper.getHolds(TestHelperObjects.fakeID)
-            assertEquals(holds, holdsFromDAOWrapper)
+            assertEquals(TestHelperObjects.fakeHolds, holdsFromDAOWrapper)
         }
     }
 
