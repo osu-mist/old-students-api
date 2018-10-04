@@ -10,6 +10,7 @@ class StudentsUriBuilderTest {
     URI endpointUri = new URI("https://foo.oregonstate.edu/v1")
 
     final String osuID = "912345678"
+    final String endpoint = "gpa"
 
     @Before
     void setup() {
@@ -17,35 +18,29 @@ class StudentsUriBuilderTest {
     }
 
     /**
-     * Check the expected URI structure is returned, given the method arguments.
+     * Check the expected URI structure with a term is returned.
      */
     @Test
-    void testAcademicStatusUriBuilder() {
+    void testGenericUriBuilderWithTerm() {
         String term = "201801"
         String expectedUriWithTerm =
-                "${endpointUri.toString()}/students/${osuID}/dual-enrollment?term=${term}"
+                "${endpointUri.toString()}/students/${osuID}/${endpoint}?term=${term}"
 
-        URI builderUriWithTerm = studentsUriBuilder.dualEnrollmentUri(osuID, term)
+        URI builderUriWithTerm = studentsUriBuilder.genericUri(endpoint, osuID, term)
 
         assertEquals(expectedUriWithTerm, builderUriWithTerm.toString())
-
-        String expectedUriWithoutTerm =
-                "${endpointUri.toString()}/students/${osuID}/dual-enrollment"
-
-        URI builderUriWithoutTerm = studentsUriBuilder.dualEnrollmentUri(osuID, null)
-
-        assertEquals(expectedUriWithoutTerm, builderUriWithoutTerm.toString())
     }
 
     /**
-     * Check the expected URI is returned for a workstudy URI.
+     * Check the expected URI structure without a term is returned.
      */
     @Test
-    void testWorkStudyUriBuilder() {
-        String expectedUri = "${endpointUri.toString()}/students/${osuID}/work-study"
+    void testGenericUriBuilderWithoutTerm() {
+        String expectedUriWithoutTerm =
+                "${endpointUri.toString()}/students/${osuID}/$endpoint"
 
-        URI builderUri = studentsUriBuilder.workStudyUri(osuID)
+        URI builderUriWithoutTerm = studentsUriBuilder.genericUri(endpoint, osuID)
 
-        assertEquals(expectedUri, builderUri.toString())
+        assertEquals(expectedUriWithoutTerm, builderUriWithoutTerm.toString())
     }
 }

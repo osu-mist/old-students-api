@@ -62,7 +62,7 @@ class StudentsResource extends Resource {
         }
 
         ResultObject resultObject = new ResultObject(
-                links: getSelfLink(uriBuilder.dualEnrollmentUri(osuID, term)),
+                links: getSelfLink(uriBuilder.genericUri("dual-enrollment", osuID, term)),
                 data: dualEnrollments.collect {
                     new ResourceObject(
                             id: getResourceObjectID(osuID, it.term),
@@ -93,7 +93,7 @@ class StudentsResource extends Resource {
         }
 
         ResultObject resultObject = new ResultObject(
-                links: getSelfLink(uriBuilder.workStudyUri(osuID)),
+                links: getSelfLink(uriBuilder.genericUri("work-study", osuID)),
                 data: new ResourceObject(
                         id: osuID,
                         type: "work-study",
@@ -117,7 +117,7 @@ class StudentsResource extends Resource {
         }
 
         ResultObject resultObject = new ResultObject(
-                links: getSelfLink(uriBuilder.accountBalanceUri(osuID)),
+                links: getSelfLink(uriBuilder.genericUri("account-balance", osuID)),
                 data: new ResourceObject(
                         id: osuID,
                         type: "account-balance",
@@ -141,7 +141,7 @@ class StudentsResource extends Resource {
         }
 
         ResultObject resultObject = new ResultObject(
-                links: getSelfLink(uriBuilder.accountTransactionsUri(osuID)),
+                links: getSelfLink(uriBuilder.genericUri("account-transactions", osuID)),
                 data: new ResourceObject(
                         id: osuID,
                         type: "account-transactions",
@@ -165,7 +165,7 @@ class StudentsResource extends Resource {
         }
 
         ResultObject resultObject = new ResultObject(
-                links: getSelfLink(uriBuilder.gpaUri(osuID)),
+                links: getSelfLink(uriBuilder.genericUri("gpa", osuID)),
                 data: new ResourceObject(
                         id: osuID,
                         type: "gpa",
@@ -191,7 +191,7 @@ class StudentsResource extends Resource {
         }
 
         ResultObject resultObject = new ResultObject(
-                links: getSelfLink(uriBuilder.academicStatusUri(osuID, term)),
+                links: getSelfLink(uriBuilder.genericUri("academic-status", osuID, term)),
                 data: academicStatus.collect {
                     new ResourceObject(
                             id: getResourceObjectID(osuID, it.term),
@@ -219,7 +219,7 @@ class StudentsResource extends Resource {
         }
 
         ResultObject resultObject = new ResultObject(
-                links: getSelfLink(uriBuilder.gradesUri(osuID, term)),
+                links: getSelfLink(uriBuilder.genericUri("grades", osuID, term)),
                 data: grades.collect {
                     new ResourceObject(
                             id: getResourceObjectID(osuID, it.term, it.courseReferenceNumber),
@@ -251,7 +251,7 @@ class StudentsResource extends Resource {
         }
 
         ResultObject resultObject = new ResultObject(
-                links: getSelfLink(uriBuilder.classScheduleUri(osuID, term)),
+                links: getSelfLink(uriBuilder.genericUri("class-schedule", osuID, term)),
                 data: classSchedule.collect {
                     new ResourceObject(
                             id: getResourceObjectID(osuID, it.term, it.courseReferenceNumber),
@@ -277,7 +277,7 @@ class StudentsResource extends Resource {
         }
 
         ResultObject resultObject = new ResultObject(
-                links: getSelfLink(uriBuilder.holdsUri(osuID)),
+                links: getSelfLink(uriBuilder.genericUri("holds", osuID)),
                 data: new ResourceObject(
                             id: getResourceObjectID(osuID),
                             type: "holds",
