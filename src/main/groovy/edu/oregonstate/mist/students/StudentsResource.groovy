@@ -68,6 +68,7 @@ class StudentsResource extends Resource {
                             id: getResourceObjectID(osuID, it.term),
                             type: "dual-enrollment",
                             attributes: it,
+                            links: getSelfLink(null)
                     )
                 }
         )
@@ -97,7 +98,8 @@ class StudentsResource extends Resource {
                 data: new ResourceObject(
                         id: osuID,
                         type: "work-study",
-                        attributes: workStudyObject
+                        attributes: workStudyObject,
+                        links: getSelfLink(null)
                 )
         )
 
@@ -121,7 +123,8 @@ class StudentsResource extends Resource {
                 data: new ResourceObject(
                         id: osuID,
                         type: "account-balance",
-                        attributes: accountBalance
+                        attributes: accountBalance,
+                        links: getSelfLink(null)
                 )
         )
 
@@ -145,7 +148,8 @@ class StudentsResource extends Resource {
                 data: new ResourceObject(
                         id: osuID,
                         type: "account-transactions",
-                        attributes: accountTransactions
+                        attributes: accountTransactions,
+                        links: getSelfLink(null)
                 )
         )
 
@@ -169,7 +173,8 @@ class StudentsResource extends Resource {
                 data: new ResourceObject(
                         id: osuID,
                         type: "gpa",
-                        attributes: gpa
+                        attributes: gpa,
+                        links: getSelfLink(null)
                 )
         )
 
@@ -196,7 +201,8 @@ class StudentsResource extends Resource {
                     new ResourceObject(
                             id: getResourceObjectID(osuID, it.term),
                             type: "academic-status",
-                            attributes: it
+                            attributes: it,
+                            links: getSelfLink(null)
                     )
                 }
         )
@@ -224,7 +230,8 @@ class StudentsResource extends Resource {
                     new ResourceObject(
                             id: getResourceObjectID(osuID, it.term, it.courseReferenceNumber),
                             type: "grades",
-                            attributes: it
+                            attributes: it,
+                            links: getSelfLink(null)
                     )
                 }
         )
@@ -256,7 +263,8 @@ class StudentsResource extends Resource {
                     new ResourceObject(
                             id: getResourceObjectID(osuID, it.term, it.courseReferenceNumber),
                             type: "class-schedule",
-                            attributes: it
+                            attributes: it,
+                            links: getSelfLink(null)
                     )
                 }
         )
@@ -281,7 +289,8 @@ class StudentsResource extends Resource {
                 data: new ResourceObject(
                             id: getResourceObjectID(osuID),
                             type: "holds",
-                            attributes: holds
+                            attributes: holds,
+                            links: getSelfLink(null)
                 )
         )
 

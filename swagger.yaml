@@ -234,6 +234,8 @@ definitions:
                 format: float
                 description: Current balance of student's account, in USD.
                 example: 2500.39
+          links:
+            $ref: "#/definitions/NullSelfLink"
   AccountTransactionsResultObject:
     properties:
       links:
@@ -265,6 +267,8 @@ definitions:
                       format: date
                       description: Date the transaction was entered.
                       example: "2018-04-27T06:31:15Z"
+          links:
+            $ref: "#/definitions/NullSelfLink"
   AcademicStatusResultObject:
     properties:
       links:
@@ -308,6 +312,8 @@ definitions:
                   type: array
                   items:
                     $ref: '#/definitions/GradePointAverageObject'
+            links:
+              $ref: "#/definitions/NullSelfLink"
   GradePointAverageResultObject:
     properties:
       links:
@@ -326,6 +332,8 @@ definitions:
                 type: array
                 items:
                   $ref: '#/definitions/GradePointAverageObject'
+          links:
+            $ref: "#/definitions/NullSelfLink"
   GradePointAverageObject:
     properties:
       gpa:
@@ -436,6 +444,8 @@ definitions:
                   description: Academic level of the course.
                   type: string
                   example: "Undergraduate"
+            links:
+              $ref: "#/definitions/NullSelfLink"
   ClassScheduleResultObject:
     properties:
       links:
@@ -606,6 +616,8 @@ definitions:
                         description: Whether this meeting time meets on Saturday.
                         type: boolean
                         example: false
+            links:
+              $ref: "#/definitions/NullSelfLink"
   HoldsResultObject:
     properties:
       links:
@@ -647,6 +659,8 @@ definitions:
                       description: The reason the hold is on the student's record.
                       type: string
                       example: "CS 161"
+          links:
+            $ref: "#/definitions/NullSelfLink"
   WorkStudyResultObject:
     properties:
       links:
@@ -708,6 +722,8 @@ definitions:
                         - "Certified"
                         - "System Offered"
                         - "Canceled"
+          links:
+            $ref: "#/definitions/NullSelfLink"
   DualEnrollmentResultObject:
     properties:
       links:
@@ -729,6 +745,8 @@ definitions:
                 description: The number of dual enrollment credit hours enrolled for the given term.
                 type: integer
                 example: 5
+          links:
+            $ref: "#/definitions/NullSelfLink"
 
   StudentID:
     type: string
@@ -745,6 +763,13 @@ definitions:
       self:
         type: string
         format: url
+  NullSelfLink:
+    properties:
+      self:
+        type: string
+        format: url
+        description: Self link for resource object, currently null.
+        example: null
   Error:
     properties:
       errors:
