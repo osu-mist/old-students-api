@@ -66,7 +66,7 @@ paths:
             $ref: '#/definitions/Error'
   /students/{osuID}/academic-status:
     get:
-      description: Get terms a student was registered for
+      description: Get GPA and academic standing for each term a student is registered for.
       parameters:
         - $ref: '#/parameters/term'
         - $ref: '#/parameters/osuID'
@@ -138,7 +138,7 @@ paths:
             $ref: '#/definitions/Error'
   /students/{osuID}/holds:
     get:
-      description: Get a student's current holds.
+      description: Get a student's current academic holds.
       parameters:
         - $ref: '#/parameters/osuID'
         - $ref: '#/parameters/pretty'
