@@ -1,46 +1,26 @@
 package edu.oregonstate.mist.students.db
 
 import edu.oregonstate.mist.contrib.AbstractStudentsDAO
-import edu.oregonstate.mist.students.core.AcademicStatusObject
 import edu.oregonstate.mist.students.core.Award
-import edu.oregonstate.mist.students.mapper.AcademicStandingMapper
+import edu.oregonstate.mist.students.core.DualEnrollment
+
 import edu.oregonstate.mist.students.mapper.AwardMapper
+import edu.oregonstate.mist.students.mapper.DualEnrollmentMapper
 import org.skife.jdbi.v2.sqlobject.Bind
 import org.skife.jdbi.v2.sqlobject.SqlQuery
 import org.skife.jdbi.v2.sqlobject.customizers.Mapper
 
 public interface StudentsDAO extends Closeable {
-
-    /**
-     * Return credit hours enrolled at OSU.
-     * @param personID
-     * @param term
-     * @return
-     */
-    @SqlQuery(AbstractStudentsDAO.osuCreditsQuery)
-    Integer getOSUCreditHours(@Bind("id") String personID,
-                              @Bind("term") String term)
-
     /**
      * Return credit hours enrolled at a non-OSU institution.
      * @param personID
      * @param term
      * @return
      */
+    @Mapper(DualEnrollmentMapper)
     @SqlQuery(AbstractStudentsDAO.dualEnrollmentCreditsQuery)
-    Integer getDualEnrollmentCreditHours(@Bind("id") String personID,
-                                         @Bind("term") String term)
-
-    /**
-     * Return partial AcademicStatusObject with academic standing information
-     * @param personID
-     * @param term
-     * @return
-     */
-    @Mapper(AcademicStandingMapper)
-    @SqlQuery(AbstractStudentsDAO.academicStandingQuery)
-    AcademicStatusObject getAcademicStanding(@Bind("id") String personID,
-                                             @Bind("term") String term)
+    List<DualEnrollment> getDualEnrollment(@Bind("id") String personID,
+                                           @Bind("term") String term)
 
     /**
      * Get a list of award objects for work study financial aid awards
@@ -57,7 +37,22 @@ public interface StudentsDAO extends Closeable {
      * @return
      */
     @SqlQuery(AbstractStudentsDAO.personIDQuery)
-    String getPersonID(@Bind("osu_id") String osuID)
+    String getPersonID(@Bind("osuID") String osuID)
+
+    /**
+     * Checks that a term code is valid.
+     * @param term
+     * @return
+     */
+    @SqlQuery(AbstractStudentsDAO.termValidationQuery)
+    boolean isValidTerm(@Bind("term") String term)
+
+    /**
+     * Returns the current term.
+     * @return
+     */
+    @SqlQuery(AbstractStudentsDAO.getCurrentTermQuery)
+    String getCurrentTerm()
 
     @Override
     void close()

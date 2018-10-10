@@ -9,16 +9,13 @@ class StudentsUriBuilder {
         this.endpointUri = endpointUri
     }
 
-    URI academicStatusUri(String osuID, String term) {
-        UriBuilder.fromUri(this.endpointUri)
-                .path("students/{osuID}/academicstatus")
-                .queryParam("term", "{term}")
-                .build(osuID, term)
-    }
+    URI genericUri(String endpoint, String osuID, String term = null) {
+        UriBuilder builder = UriBuilder.fromUri(this.endpointUri).path("students/{osuID}/$endpoint")
 
-    URI workStudyUri(String osuID) {
-        UriBuilder.fromUri(this.endpointUri)
-                .path("students/{osuID}/workstudy")
-                .build(osuID)
+        if (term) {
+            builder.queryParam("term", term)
+        }
+
+        builder.build(osuID)
     }
 }

@@ -4,6 +4,17 @@ import com.codahale.metrics.annotation.Timed
 import edu.oregonstate.mist.api.Resource
 import edu.oregonstate.mist.api.jsonapi.ResourceObject
 import edu.oregonstate.mist.api.jsonapi.ResultObject
+import edu.oregonstate.mist.students.core.AcademicStatus
+import edu.oregonstate.mist.students.core.AccountBalance
+import edu.oregonstate.mist.students.core.AccountTransactions
+import edu.oregonstate.mist.students.core.ClassSchedule
+import edu.oregonstate.mist.students.core.DualEnrollment
+import edu.oregonstate.mist.students.core.GPALevels
+import edu.oregonstate.mist.students.core.Grade
+import edu.oregonstate.mist.students.core.Holds
+import edu.oregonstate.mist.students.core.WorkStudyObject
+import edu.oregonstate.mist.students.db.InvalidTermException
+import edu.oregonstate.mist.students.db.StudentNotFoundException
 import edu.oregonstate.mist.students.db.StudentsDAOWrapper
 import groovy.transform.TypeChecked
 
@@ -38,23 +49,28 @@ class StudentsResource extends Resource {
      */
     @Timed
     @GET
-    @Path ('{id: \\d+}/academicstatus')
-    Response getAcademicStatus(@PathParam("id") String osuID, @QueryParam("term") String term) {
-        if (!term?.trim()) {
-            return badRequest("term (query parameter) is required.").build()
-        }
+    @Path ('{osuID: [0-9a-zA-Z-]+}/dual-enrollment')
+    Response getDualEnrollment(@PathParam("osuID") String osuID, @QueryParam("term") String term) {
+        List<DualEnrollment> dualEnrollments
 
-        String personID = studentsDAOWrapper.getPersonID(osuID)
-
-        if (!personID) {
+        try {
+            dualEnrollments = studentsDAOWrapper.getDualEnrollment(osuID, term)
+        } catch (StudentNotFoundException e) {
             return notFound().build()
+        } catch (InvalidTermException e) {
+            return invalidTermResponse()
         }
 
-        ResultObject resultObject = new ResultObject(data: new ResourceObject(
-                id: term,
-                type: "academicstatus",
-                attributes: studentsDAOWrapper.getAcademicStatus(personID, term),
-                links: ["self": uriBuilder.academicStatusUri(osuID, term)])
+        ResultObject resultObject = new ResultObject(
+                links: getSelfLink(uriBuilder.genericUri("dual-enrollment", osuID, term)),
+                data: dualEnrollments.collect {
+                    new ResourceObject(
+                            id: getResourceObjectID(osuID, it.term),
+                            type: "dual-enrollment",
+                            attributes: it,
+                            links: getSelfLink(null)
+                    )
+                }
         )
 
         ok(resultObject).build()
@@ -67,20 +83,237 @@ class StudentsResource extends Resource {
      */
     @Timed
     @GET
-    @Path ('{id: \\d+}/workstudy')
-    Response getWorkStudy(@PathParam("id") String osuID) {
-        String personID = studentsDAOWrapper.getPersonID(osuID)
+    @Path ('{osuID: [0-9a-zA-Z-]+}/work-study')
+    Response getWorkStudy(@PathParam("osuID") String osuID) {
+        WorkStudyObject workStudyObject
 
-        if (!personID) {
+        try {
+            workStudyObject = studentsDAOWrapper.getWorkStudy(osuID)
+        } catch (StudentNotFoundException e) {
             return notFound().build()
         }
 
-        ResultObject resultObject = new ResultObject(data: new ResourceObject(
-                type: "workstudy",
-                attributes: studentsDAOWrapper.getWorkStudy(personID),
-                links: ["self": uriBuilder.workStudyUri(osuID)]
-        ))
+        ResultObject resultObject = new ResultObject(
+                links: getSelfLink(uriBuilder.genericUri("work-study", osuID)),
+                data: new ResourceObject(
+                        id: osuID,
+                        type: "work-study",
+                        attributes: workStudyObject,
+                        links: getSelfLink(null)
+                )
+        )
 
         ok(resultObject).build()
+    }
+
+    @Timed
+    @GET
+    @Path ('{osuID: [0-9a-zA-Z-]+}/account-balance')
+    Response getAccountBalance(@PathParam("osuID") String osuID) {
+        AccountBalance accountBalance
+
+        try {
+            accountBalance = studentsDAOWrapper.getAccountBalance(osuID)
+        } catch (StudentNotFoundException e) {
+            return notFound().build()
+        }
+
+        ResultObject resultObject = new ResultObject(
+                links: getSelfLink(uriBuilder.genericUri("account-balance", osuID)),
+                data: new ResourceObject(
+                        id: osuID,
+                        type: "account-balance",
+                        attributes: accountBalance,
+                        links: getSelfLink(null)
+                )
+        )
+
+        ok(resultObject).build()
+    }
+
+    @Timed
+    @GET
+    @Path ('{osuID: [0-9a-zA-Z-]+}/account-transactions')
+    Response getAccountTransactions(@PathParam("osuID") String osuID) {
+        AccountTransactions accountTransactions
+
+        try {
+            accountTransactions = studentsDAOWrapper.getAccountTransactions(osuID)
+        } catch (StudentNotFoundException e) {
+            return notFound().build()
+        }
+
+        ResultObject resultObject = new ResultObject(
+                links: getSelfLink(uriBuilder.genericUri("account-transactions", osuID)),
+                data: new ResourceObject(
+                        id: osuID,
+                        type: "account-transactions",
+                        attributes: accountTransactions,
+                        links: getSelfLink(null)
+                )
+        )
+
+        ok(resultObject).build()
+    }
+
+    @Timed
+    @GET
+    @Path ('{osuID: [0-9a-zA-Z-]+}/gpa')
+    Response getGPA(@PathParam("osuID") String osuID) {
+        GPALevels gpa
+
+        try {
+            gpa = studentsDAOWrapper.getGPA(osuID)
+        } catch (StudentNotFoundException e) {
+            return notFound().build()
+        }
+
+        ResultObject resultObject = new ResultObject(
+                links: getSelfLink(uriBuilder.genericUri("gpa", osuID)),
+                data: new ResourceObject(
+                        id: osuID,
+                        type: "gpa",
+                        attributes: gpa,
+                        links: getSelfLink(null)
+                )
+        )
+
+        ok(resultObject).build()
+    }
+
+    @Timed
+    @GET
+    @Path ('{osuID: [0-9a-zA-Z-]+}/academic-status')
+    Response getAcademicStatus(@PathParam("osuID") String osuID, @QueryParam("term") String term) {
+        List<AcademicStatus> academicStatus
+
+        try {
+            academicStatus = studentsDAOWrapper.getAcademicStatus(osuID, term)
+        } catch (StudentNotFoundException e) {
+            return notFound().build()
+        } catch (InvalidTermException e) {
+            return invalidTermResponse()
+        }
+
+        ResultObject resultObject = new ResultObject(
+                links: getSelfLink(uriBuilder.genericUri("academic-status", osuID, term)),
+                data: academicStatus.collect {
+                    new ResourceObject(
+                            id: getResourceObjectID(osuID, it.term),
+                            type: "academic-status",
+                            attributes: it,
+                            links: getSelfLink(null)
+                    )
+                }
+        )
+
+        ok(resultObject).build()
+    }
+
+    @Timed
+    @GET
+    @Path ('{osuID: [0-9a-zA-Z-]+}/grades')
+    Response getGrades(@PathParam("osuID") String osuID, @QueryParam("term") String term) {
+        List<Grade> grades
+
+        try {
+            grades = studentsDAOWrapper.getGrades(osuID, term)
+        } catch (StudentNotFoundException e) {
+            return notFound().build()
+        } catch (InvalidTermException e) {
+            return invalidTermResponse()
+        }
+
+        ResultObject resultObject = new ResultObject(
+                links: getSelfLink(uriBuilder.genericUri("grades", osuID, term)),
+                data: grades.collect {
+                    new ResourceObject(
+                            id: getResourceObjectID(osuID, it.term, it.courseReferenceNumber),
+                            type: "grades",
+                            attributes: it,
+                            links: getSelfLink(null)
+                    )
+                }
+        )
+
+        ok(resultObject).build()
+    }
+
+    @Timed
+    @GET
+    @Path ('{osuID: [0-9a-zA-Z-]+}/class-schedule')
+    Response getClassSchedule(@PathParam("osuID") String osuID, @QueryParam("term") String term) {
+        if (!term) {
+            return badRequest("Term (query parameter) is required.").build()
+        }
+
+        List<ClassSchedule> classSchedule
+
+        try {
+            classSchedule = studentsDAOWrapper.getClassSchedule(osuID, term)
+        } catch (StudentNotFoundException e) {
+            return notFound().build()
+        } catch (InvalidTermException e) {
+            return invalidTermResponse()
+        }
+
+        ResultObject resultObject = new ResultObject(
+                links: getSelfLink(uriBuilder.genericUri("class-schedule", osuID, term)),
+                data: classSchedule.collect {
+                    new ResourceObject(
+                            id: getResourceObjectID(osuID, it.term, it.courseReferenceNumber),
+                            type: "class-schedule",
+                            attributes: it,
+                            links: getSelfLink(null)
+                    )
+                }
+        )
+
+        ok(resultObject).build()
+    }
+
+    @Timed
+    @GET
+    @Path ('{osuID: [0-9a-zA-Z-]+}/holds')
+    Response getHolds(@PathParam("osuID") String osuID) {
+        Holds holds
+
+        try {
+            holds = studentsDAOWrapper.getHolds(osuID)
+        } catch (StudentNotFoundException e) {
+            return notFound().build()
+        }
+
+        ResultObject resultObject = new ResultObject(
+                links: getSelfLink(uriBuilder.genericUri("holds", osuID)),
+                data: new ResourceObject(
+                            id: getResourceObjectID(osuID),
+                            type: "holds",
+                            attributes: holds,
+                            links: getSelfLink(null)
+                )
+        )
+
+        ok(resultObject).build()
+    }
+
+    private def getSelfLink(URI uri) {
+        ["self": uri]
+    }
+
+    private String getResourceObjectID(String id) {
+        id
+    }
+
+    private String getResourceObjectID(String id, String term) {
+        "$id-$term"
+    }
+
+    private String getResourceObjectID(String id, String term, String courseReferenceNumber) {
+        "$id-$term-$courseReferenceNumber"
+    }
+
+    private Response invalidTermResponse() {
+        badRequest("Term is invalid.").build()
     }
 }
