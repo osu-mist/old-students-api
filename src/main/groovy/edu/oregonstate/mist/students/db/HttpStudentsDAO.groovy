@@ -286,10 +286,12 @@ class BackendGrade {
     }
 
     String classFormat
+    String classFormatDescription
 
     @JsonProperty("classFormat")
     private void unpackClassFormat(Map<String, String> classFormat) {
-        this.classFormat = HttpStudentsDAO.getDescription(classFormat)
+        this.classFormat = HttpStudentsDAO.getCode(classFormat)
+        this.classFormatDescription = HttpStudentsDAO.getDescription(classFormat)
     }
 
     Integer creditHour
@@ -322,6 +324,7 @@ class BackendClassSchedule {
     String term
     String termDescription
     String scheduleDescription
+    String scheduleType
     Integer creditHour
 
     String registrationStatus
@@ -357,10 +360,6 @@ class BackendMeetingTime {
     LocalDate startDate
     LocalDate endDate
 
-    // The backend datasource formats times as 4 character strings. Ex: "1150".
-    // We deserialize these as strings, and then convert them to
-    // a LocalTime object before serialization.
-
     private static DateTimeFormatter backendTimeFormat = DateTimeFormatter.ofPattern("HHmm")
 
     @JsonIgnore
@@ -385,6 +384,7 @@ class BackendMeetingTime {
     String campusDescription
     BigDecimal hoursWeek
     Integer creditHourSession
+    String meetingScheduleType
     Boolean sunday
     Boolean monday
     Boolean tuesday
