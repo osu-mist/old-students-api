@@ -436,6 +436,7 @@ definitions:
                   description: Format type for the course.
                   type: string
                   example: "A"
+                  enum: [B, C, D, E, F, G, H, I, J, K, A, L, M, N, O, P , Q, R, S, T, U, W, Y, Z, V, X, MID, FIL, HYB]
                 creditHours:
                   description: Credit hours of the course.
                   type: integer
@@ -512,6 +513,7 @@ definitions:
                   description: Type of schedule for the course (agnostic of meeting times).
                   type: string
                   example: "A"
+                  enum: [B, C, D, E, F, G, H, I, J, K, A, L, M, N, O, P , Q, R, S, T, U, W, Y, Z, V, X, MID, FIL, HYB]
                 creditHours:
                   description: Credit hours of the course.
                   type: integer
@@ -630,6 +632,7 @@ definitions:
                           HYB: Hybrid
                         type: string
                         example: "A"
+                        enum: [B, C, D, E, F, G, H, I, J, K, A, L, M, N, O, P , Q, R, S, T, U, W, Y, Z, V, X, MID, FIL, HYB]
                       meetsSunday:
                         description: Whether this meeting time meets on Sunday.
                         type: boolean
