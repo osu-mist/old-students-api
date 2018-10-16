@@ -13,7 +13,8 @@ class Grade {
     String sectionNumber
     String term
     String termDescription
-    String classFormat
+    String scheduleDescription
+    String scheduleType
     Integer creditHours
     String registrationStatus
     String courseLevel
@@ -31,7 +32,8 @@ class Grade {
                     sectionNumber: sequenceNumber,
                     term: term,
                     termDescription: termDescription,
-                    classFormat: classFormat,
+                    scheduleDescription: classFormatDescription,
+                    scheduleType: classFormat,
                     creditHours: creditHour,
                     registrationStatus: registrationStatus,
                     courseLevel: courseLevel

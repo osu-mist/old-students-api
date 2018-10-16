@@ -19,7 +19,8 @@ class ClassSchedule {
     String sectionNumber
     String term
     String termDescription
-    String classFormat
+    String scheduleDescription
+    String scheduleType
     Integer creditHours
     String registrationStatus
     String gradingMode
@@ -40,7 +41,8 @@ class ClassSchedule {
                     sectionNumber: sequenceNumber,
                     term: term,
                     termDescription: termDescription,
-                    classFormat: scheduleDescription,
+                    scheduleDescription: scheduleDescription,
+                    scheduleType: scheduleType,
                     creditHours: creditHour,
                     registrationStatus: registrationStatus,
                     gradingMode: gradingModeDescription,
@@ -85,6 +87,7 @@ class MeetingTime {
     String campus
     BigDecimal hoursPerWeek
     Integer creditHourSession
+    String scheduleType
     Boolean meetsSunday
     Boolean meetsMonday
     Boolean meetsTuesday
@@ -106,6 +109,7 @@ class MeetingTime {
                     campus: campusDescription,
                     hoursPerWeek: hoursWeek,
                     creditHourSession: creditHourSession,
+                    scheduleType: meetingScheduleType,
                     meetsSunday: sunday,
                     meetsMonday: monday,
                     meetsTuesday: tuesday,
