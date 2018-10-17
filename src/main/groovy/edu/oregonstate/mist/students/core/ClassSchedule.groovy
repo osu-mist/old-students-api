@@ -88,13 +88,7 @@ class MeetingTime {
     BigDecimal hoursPerWeek
     Integer creditHourSession
     String scheduleType
-    Boolean meetsSunday
-    Boolean meetsMonday
-    Boolean meetsTuesday
-    Boolean meetsWednesday
-    Boolean meetsThursday
-    Boolean meetsFriday
-    Boolean meetsSaturday
+    List<String> weeklySchedule
 
     static fromBackendMeetingTime(BackendMeetingTime backendMeetingTime) {
         backendMeetingTime.with {
@@ -110,14 +104,38 @@ class MeetingTime {
                     hoursPerWeek: hoursWeek,
                     creditHourSession: creditHourSession,
                     scheduleType: meetingScheduleType,
-                    meetsSunday: sunday,
-                    meetsMonday: monday,
-                    meetsTuesday: tuesday,
-                    meetsWednesday: wednesday,
-                    meetsThursday: thursday,
-                    meetsFriday: friday,
-                    meetsSaturday: saturday
+                    weeklySchedule: parseWeeklySchedule(backendMeetingTime)
             )
         }
+    }
+
+    private static List<String> parseWeeklySchedule(BackendMeetingTime backendMeetingTime) {
+        List<String> weeklySchedule = []
+
+        backendMeetingTime.with {
+            if (monday) {
+                weeklySchedule.add("M")
+            }
+            if (tuesday) {
+                weeklySchedule.add("T")
+            }
+            if (wednesday) {
+                weeklySchedule.add("W")
+            }
+            if (thursday) {
+                weeklySchedule.add("Th")
+            }
+            if (friday) {
+                weeklySchedule.add("F")
+            }
+            if (saturday) {
+                weeklySchedule.add("Sa")
+            }
+            if (sunday) {
+                weeklySchedule.add("Su")
+            }
+        }
+
+        weeklySchedule
     }
 }

@@ -125,13 +125,7 @@ class TestHelperObjects {
                     hoursPerWeek: 1.33,
                     creditHourSession: 4,
                     scheduleType: "A",
-                    meetsSunday: false,
-                    meetsMonday: true,
-                    meetsTuesday: true,
-                    meetsWednesday: true,
-                    meetsThursday: true,
-                    meetsFriday: true,
-                    meetsSaturday: true
+                    weeklySchedule: ['M', 'W', 'F']
             )]
     )]
 }
