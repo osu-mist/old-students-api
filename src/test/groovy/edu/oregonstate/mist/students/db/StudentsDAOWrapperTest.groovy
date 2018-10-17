@@ -1,5 +1,6 @@
-package edu.oregonstate.mist.students
+package edu.oregonstate.mist.students.db
 
+import edu.oregonstate.mist.students.TestHelperObjects
 import edu.oregonstate.mist.students.core.AcademicStatus
 import edu.oregonstate.mist.students.core.AccountBalance
 import edu.oregonstate.mist.students.core.AccountTransactions
