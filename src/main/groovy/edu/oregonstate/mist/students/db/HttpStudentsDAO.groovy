@@ -55,12 +55,12 @@ class HttpStudentsDAO {
         this.baseURI = UriBuilder.fromUri(endpoint).path("/api").build()
     }
 
-    protected String getPersonsGuid(String bannerId) {
-        String rawResponse = getResponse(personIdentificationsEndpoint, ['bannerId': bannerId])
+    protected Map getPerson(String bannerId) {
+        String rawResponse = getResponse(personIdentificationsEndpoint, ["bannerId": bannerId])
 
         JsonSlurper jsonSlurper = new JsonSlurper()
         def parsedResponse = jsonSlurper.parseText(rawResponse)
-        if (parsedResponse.size() == 1) { parsedResponse[0]['guid'] }
+        if (parsedResponse.size() == 1) { parsedResponse[0] }
     }
 
     protected String getAcademicLevel(String levelGUID) {
@@ -68,7 +68,7 @@ class HttpStudentsDAO {
 
         JsonSlurper jsonSlurper = new JsonSlurper()
         def parsedResponse = jsonSlurper.parseText(rawResponse)
-        parsedResponse['title']
+        parsedResponse["title"]
     }
 
     protected String getClassification(String classGUID) {
@@ -76,24 +76,40 @@ class HttpStudentsDAO {
 
         JsonSlurper jsonSlurper = new JsonSlurper()
         def parsedResponse = jsonSlurper.parseText(rawResponse)
-        parsedResponse['title']
+        parsedResponse["title"]
     }
 
     protected GeneralInfo getGeneralInfo(String id) {
-        String personGUID = getPersonsGuid(id)
-        String rawResponse = getResponse(studentsEndpoint, ['person': personGUID])
-        String level, classification
-
         JsonSlurper jsonSlurper = new JsonSlurper()
+
+        def person = getPerson(id)
+
+        String personGUID = person['guid']
+        String firstName = person['firstName']
+        String middleName = person['middleName']
+        String lastName = person['lastName']
+        String fullName = person['fullName']
+        String level = null
+        String classification = null
+
+        String rawResponse = getResponse(studentsEndpoint, ["person": personGUID])
+
         def parsedResponse = jsonSlurper.parseText(rawResponse)
 
-        if (parsedResponse.size() == 1) {
-            def measures = parsedResponse[0]['measures'][0]
-            level = getAcademicLevel(measures['level']['id'])
-            classification = getClassification(measures['classification']['id'])
+        if (parsedResponse.size() == 1 && parsedResponse[0]["measures"]) {
+            def measures = parsedResponse[0]["measures"][0]
+            level = getAcademicLevel(measures["level"]["id"])
+            classification = getClassification(measures["classification"]["id"])
         }
 
-        BackendGeneralInfo generalInfo = ['level': level, 'classification': classification]
+        BackendGeneralInfo generalInfo = [
+            "firstName": firstName,
+            "middleName": middleName,
+            "lastName": lastName,
+            "fullName": fullName,
+            "level": level,
+            "classification": classification
+        ]
 
         GeneralInfo.fromBackendGeneralInfo(generalInfo)
     }
@@ -129,7 +145,7 @@ class HttpStudentsDAO {
     }
 
     protected List<AcademicStatus> getAcademicStatus(String id, String term) {
-        String response = getResponse(getAcademicStandingsEndpoint(id), ['term': term])
+        String response = getResponse(getAcademicStandingsEndpoint(id), ["term": term])
 
         def unmappedResponse = objectMapper.readValue(response,
                 new TypeReference<List<HashMap>>() {})
@@ -140,8 +156,8 @@ class HttpStudentsDAO {
 
         if (term && academicStanding.size() == 1
                 && academicStanding[0].academicStandingTerm != term) {
-            // When querying with a valid term that the student doesn't have data for, the backend
-            // API will return with a malformed academic standing object. The best way I've found to
+            // When querying with a valid term that the student doesn"t have data for, the backend
+            // API will return with a malformed academic standing object. The best way I"ve found to
             // know that the object is malformed is to compare the term against the term used in the
             // query. If they differ, return an empty object to reflect that the student and term is
             // valid, but no data exists for the given term.
@@ -152,7 +168,7 @@ class HttpStudentsDAO {
     }
 
     protected List<Grade> getGrades(String id, String term) {
-        String response = getResponse(getStudentsEndpoint(id, gradesEndpoint), ['term': term])
+        String response = getResponse(getStudentsEndpoint(id, gradesEndpoint), ["term": term])
 
         List<BackendGrade> grades = objectMapper.readValue(
                 response, new TypeReference<List<BackendGrade>>() {})
@@ -162,7 +178,7 @@ class HttpStudentsDAO {
 
     protected List<ClassSchedule> getClassSchedule(String id, String term) {
         String response = getResponse(
-            getStudentsEndpoint(id, classSchedulesEndpoint), ['term': term]
+            getStudentsEndpoint(id, classSchedulesEndpoint), ["term": term]
         )
 
         def unmappedResponse = objectMapper.readValue(response,
@@ -312,6 +328,10 @@ class BackendAcademicStanding {
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 class BackendGeneralInfo {
+    String firstName
+    String middleName
+    String lastName
+    String fullName
     String level
     String classification
 }
