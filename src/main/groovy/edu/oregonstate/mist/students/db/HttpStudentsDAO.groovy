@@ -10,10 +10,12 @@ import edu.oregonstate.mist.students.core.AcademicStatus
 import edu.oregonstate.mist.students.core.AccountBalance
 import edu.oregonstate.mist.students.core.AccountTransactions
 import edu.oregonstate.mist.students.core.ClassSchedule
+import edu.oregonstate.mist.students.core.GeneralInfo
 import edu.oregonstate.mist.students.core.GPALevels
 import edu.oregonstate.mist.students.core.Grade
 import edu.oregonstate.mist.students.core.Holds
 import groovy.transform.InheritConstructors
+import groovy.json.JsonSlurper
 import org.apache.http.HttpHeaders
 import org.apache.http.HttpResponse
 import org.apache.http.HttpStatus
@@ -40,6 +42,7 @@ class HttpStudentsDAO {
     private final String gradesEndpoint = "grades"
     private final String classSchedulesEndpoint = "class-schedules"
     private final String holdsEndpoint = "holds"
+    private final String personIdentifications = "person-identifications"
 
     private static Logger logger = LoggerFactory.getLogger(this)
 
@@ -48,6 +51,42 @@ class HttpStudentsDAO {
     HttpStudentsDAO(HttpClient httpClient, String endpoint) {
         this.httpClient = httpClient
         this.baseURI = UriBuilder.fromUri(endpoint).path("/api").build()
+    }
+
+    protected List<String> getGuids(String bannerId) {
+        String response = getResponse(personIdentifications, ['bannerId': bannerId])
+        List<String> guids = []
+
+        JsonSlurper jsonSlurper = new JsonSlurper()
+        jsonSlurper.parseText(response).each { item -> guids.add(item?.guid) }
+
+        guids
+
+    }
+
+    protected GeneralInfo getGeneralInfo(String id) {
+        List<String> guids = getGuids(id)
+
+        println('*******')
+        println(guids)
+        println('*******')
+        List<String> responses = []
+
+        guids.each { guid ->
+            def res = getResponse("$studentsEndpoint/$guid")
+            println(">>>>>")
+            println(res)
+            println("<<<<<")
+            responses.add(res)
+        }
+
+        println(responses)
+
+        def response = res
+
+        BackendGeneralInfo generalInfo = objectMapper.readValue(response, BackendGeneralInfo)
+
+        GeneralInfo.fromBackendGeneralInfo(generalInfo)
     }
 
     protected AccountBalance getAccountBalance(String id) {
@@ -81,7 +120,7 @@ class HttpStudentsDAO {
     }
 
     protected List<AcademicStatus> getAcademicStatus(String id, String term) {
-        String response = getResponse(getAcademicStandingsEndpoint(id), term)
+        String response = getResponse(getAcademicStandingsEndpoint(id), ['term': term])
 
         def unmappedResponse = objectMapper.readValue(response,
                 new TypeReference<List<HashMap>>() {})
@@ -104,7 +143,7 @@ class HttpStudentsDAO {
     }
 
     protected List<Grade> getGrades(String id, String term) {
-        String response = getResponse(getStudentsEndpoint(id, gradesEndpoint), term)
+        String response = getResponse(getStudentsEndpoint(id, gradesEndpoint), ['term': term])
 
         List<BackendGrade> grades = objectMapper.readValue(
                 response, new TypeReference<List<BackendGrade>>() {})
@@ -113,7 +152,9 @@ class HttpStudentsDAO {
     }
 
     protected List<ClassSchedule> getClassSchedule(String id, String term) {
-        String response = getResponse(getStudentsEndpoint(id, classSchedulesEndpoint), term)
+        String response = getResponse(
+            getStudentsEndpoint(id, classSchedulesEndpoint), ['term': term]
+        )
 
         def unmappedResponse = objectMapper.readValue(response,
                 new TypeReference<List<HashMap>>() {})
@@ -134,12 +175,14 @@ class HttpStudentsDAO {
         Holds.fromBackendHolds(holds)
     }
 
-    private String getResponse(String endpoint, String term = null) {
+    private String getResponse(String endpoint, Map params=null) {
         UriBuilder uriBuilder = UriBuilder.fromUri(baseURI)
         uriBuilder.path(endpoint)
 
-        if (term) {
-            uriBuilder.queryParam("term", term)
+        params.each { key, value ->
+            if (value != null) {
+                uriBuilder.queryParam(key, value)
+            }
         }
 
         URI requestURI = uriBuilder.build()
@@ -170,6 +213,7 @@ class HttpStudentsDAO {
             logger.info("400 response from backend data source. Error messages: $errorMessages")
 
             if (errorMessages.contains("Term not found")) {
+                def term = params?.term
                 String message = "Term: $term is invalid."
                 logger.info(message)
 
@@ -255,6 +299,11 @@ class BackendAcademicStanding {
     String academicStandingTerm
     String academicStandingTermDescription
     List<BackendGPA> termGPAs
+}
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+class BackendGeneralInfo {
+    String level
 }
 
 @JsonIgnoreProperties(ignoreUnknown = true)
