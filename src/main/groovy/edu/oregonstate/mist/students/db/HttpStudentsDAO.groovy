@@ -63,20 +63,12 @@ class HttpStudentsDAO {
         if (parsedResponse.size() == 1) { parsedResponse[0] }
     }
 
-    protected String getAcademicLevel(String levelGUID) {
-        String rawResponse = getResponse("$academicLevelsEndpoint/$levelGUID")
+    protected String getFieldbyId(String endpoint, String id, String field) {
+        String rawResponse = getResponse("$endpoint/$id")
 
         JsonSlurper jsonSlurper = new JsonSlurper()
         def parsedResponse = jsonSlurper.parseText(rawResponse)
-        parsedResponse["title"]
-    }
-
-    protected String getClassification(String classGUID) {
-        String rawResponse = getResponse("$studentClassificationsEndpoint/$classGUID")
-
-        JsonSlurper jsonSlurper = new JsonSlurper()
-        def parsedResponse = jsonSlurper.parseText(rawResponse)
-        parsedResponse["title"]
+        parsedResponse[field]
     }
 
     protected GeneralInfo getGeneralInfo(String id) {
@@ -84,22 +76,24 @@ class HttpStudentsDAO {
 
         def person = getPerson(id)
 
-        String personGUID = person['guid']
-        String firstName = person['firstName']
-        String middleName = person['middleName']
-        String lastName = person['lastName']
-        String fullName = person['fullName']
+        String personGUID = person?.guid
+        String firstName = person?.firstName
+        String middleName = person?.middleName
+        String lastName = person?.lastName
+        String fullName = person?.fullName
         String level = null
         String classification = null
 
-        String rawResponse = getResponse(studentsEndpoint, ["person": personGUID])
+        String studentResponse = getResponse(studentsEndpoint, ["person": personGUID])
 
-        def parsedResponse = jsonSlurper.parseText(rawResponse)
+        def student = jsonSlurper.parseText(studentResponse)
 
-        if (parsedResponse.size() == 1 && parsedResponse[0]["measures"]) {
-            def measures = parsedResponse[0]["measures"][0]
-            level = getAcademicLevel(measures["level"]["id"])
-            classification = getClassification(measures["classification"]["id"])
+        if (student.size() == 1 && student[0]["measures"]) {
+            def measures = student[0]["measures"][0]
+            String levelId = measures?.level?.id
+            String classificationId = measures?.classification?.id
+            level = getFieldbyId(academicLevelsEndpoint, levelId, "title")
+            classification = getFieldbyId(studentClassificationsEndpoint, classificationId, "title")
         }
 
         BackendGeneralInfo generalInfo = [

@@ -85,6 +85,22 @@ paths:
           description: Student not found
           schema:
             $ref: '#/definitions/Error'
+  /students/{osuID}/general:
+    get:
+      description: Get a student's genral information
+      parameters:
+        - $ref: '#/parameters/osuID'
+        - $ref: '#/parameters/pretty'
+        - $ref: '#/parameters/authz'
+      responses:
+        200:
+          description: Successful response
+          schema:
+            $ref: '#/definitions/GeneralInfoResultObject'
+        404:
+          description: Student not found
+          schema:
+            $ref: '#/definitions/Error'
   /students/{osuID}/grades:
     get:
       description: Get a student's final grades for their classes.
@@ -314,6 +330,74 @@ definitions:
                     $ref: '#/definitions/GradePointAverageObject'
             links:
               $ref: "#/definitions/NullSelfLink"
+  GeneralInfoResultObject:
+    properties:
+      links:
+        $ref: "#/definitions/SelfLink"
+      data:
+        properties:
+          id:
+            $ref: "#/definitions/StudentID"
+          type:
+            type: string
+            example: "general"
+          attributes:
+            properties:
+              firstName:
+                description: First name of a student
+                type: string
+                example: "John"
+              middleName:
+                description: Middle name of a student
+                type: string
+                example: null
+              lastName:
+                description: Last name of a student
+                type: string
+                example: "Doe"
+              fullName:
+                description: First name of a student
+                type: string
+                example: "Jon"
+              level:
+                description: Acamedic level of a student
+                type: string
+                example: "Undergraduate"
+                enum:
+                  - "Level Not Declared"
+                  - "Graduate"
+                  - "Postbac Degree Seeking"
+                  - "Undergraduate"
+                  - "Non-Degree / Credential"
+                  - "Professional"
+                  - "Cascades Partner"
+                  - "Cascades Partner Grad Course"
+                  - "Obsolete - Do not use"
+                  - "E-Campus Undergraduate Course"
+                  - "E-Campus Graduate Course"
+                  - "E-Campus Overlay Course"
+                  - "E-Campus Intermediate Course"
+                  - "Non Credit"
+                  - "INTO OSU GE/AE/Pathways"
+                  - "ECampus CCLP & Couseling PHD"
+              classification:
+                description: Classification of a student
+                example: "Sophomore"
+                type: string
+                enum:
+                  - "Freshman"
+                  - "Sophomore"
+                  - "Junior"
+                  - "Senior"
+                  - "Vet Med-First Year"
+                  - "Determine from Student Type"
+                  - "Continuing Higher Education"
+                  - "Vet Med-Second Year"
+                  - "Vet Med-Third Year"
+                  - "Vet Med-Fourth Year"
+                  - "Auditor Only"
+          links:
+            $ref: "#/definitions/NullSelfLink"
   GradePointAverageResultObject:
     properties:
       links:
