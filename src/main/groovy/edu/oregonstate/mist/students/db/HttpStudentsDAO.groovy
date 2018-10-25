@@ -56,11 +56,18 @@ class HttpStudentsDAO {
     }
 
     protected Map getPerson(String bannerId) {
-        String rawResponse = getResponse(personIdentificationsEndpoint, ["bannerId": bannerId])
+        String personResponse = getResponse(personIdentificationsEndpoint, ["bannerId": bannerId])
+
+        if (personResponse == '[]') {
+            String message = "Student not found"
+            logger.info(message)
+
+            throw new StudentNotFoundException(message)
+        }
 
         JsonSlurper jsonSlurper = new JsonSlurper()
-        def parsedResponse = jsonSlurper.parseText(rawResponse)
-        if (parsedResponse.size() == 1) { parsedResponse[0] }
+        def person = jsonSlurper.parseText(personResponse)
+        if (person.size() == 1) { person[0] }
     }
 
     protected String getFieldbyId(String endpoint, String id, String field) {
