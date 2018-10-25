@@ -84,10 +84,6 @@ class HttpStudentsDAO {
         def person = getPerson(id)
 
         String personGUID = person?.guid
-        String firstName = person?.firstName
-        String middleName = person?.middleName
-        String lastName = person?.lastName
-        String fullName = person?.fullName
         String level = null
         String classification = null
 
@@ -104,10 +100,10 @@ class HttpStudentsDAO {
         }
 
         BackendGeneralInfo generalInfo = [
-            "firstName": firstName,
-            "middleName": middleName,
-            "lastName": lastName,
-            "fullName": fullName,
+            "firstName": person?.firstName,
+            "middleName": person?.middleName,
+            "lastName": person?.lastName,
+            "fullName": person?.fullName,
             "level": level,
             "classification": classification
         ]
