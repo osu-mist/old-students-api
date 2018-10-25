@@ -4,6 +4,7 @@ import edu.oregonstate.mist.api.ErrorResultObject
 import edu.oregonstate.mist.api.jsonapi.ResultObject
 import edu.oregonstate.mist.students.core.ClassSchedule
 import edu.oregonstate.mist.students.core.DualEnrollment
+import edu.oregonstate.mist.students.core.GeneralInfo
 import edu.oregonstate.mist.students.core.Grade
 import edu.oregonstate.mist.students.core.WorkStudyObject
 import edu.oregonstate.mist.students.db.InvalidTermException
@@ -21,6 +22,43 @@ import static org.junit.Assert.assertNotNull
 class StudentsResourceTest {
     private final URI endpointUri = new URI("https://www.foo.com/")
     private final String invalidTermErrorMessage = "Term is invalid."
+
+    @Test
+    void badOsuIDShouldReturnNotFoundGeneralInfo() {
+        def mockDAOWrapper = getMockDAOWrapper()
+
+        mockDAOWrapper.demand.getGeneralInfo() {
+            String osuID -> throw new StudentNotFoundException()
+        }
+
+        mockDAOWrapper.use {
+            StudentsResource studentsResource = getStudentsResource()
+            checkErrorResponse(studentsResource.getGeneralInfo(
+                TestHelperObjects.fakeID), 404, null)
+        }
+    }
+
+    @Test
+    void testValidGeneralInfo() {
+        def mockDAOWrapper = getMockDAOWrapper()
+
+        GeneralInfo testGeneralInfo = new GeneralInfo(
+            firstName: "John",
+            middleName: null,
+            lastName: "Doe",
+            fullName: "Jon Doe",
+            level: "Undergraduate",
+            classification: "Sophomore"
+        )
+
+        mockDAOWrapper.demand.getGeneralInfo() { String id -> testGeneralInfo }
+
+        mockDAOWrapper.use {
+            StudentsResource studentsResource = getStudentsResource()
+            Response response = studentsResource.getGeneralInfo(TestHelperObjects.fakeID)
+            responseChecker(response, testGeneralInfo, "${TestHelperObjects.fakeID}", "general")
+        }
+    }
 
     @Test
     void badOsuIDShouldReturnNotFoundDualEnrollment() {

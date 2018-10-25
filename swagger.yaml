@@ -358,7 +358,7 @@ definitions:
               fullName:
                 description: First name of a student
                 type: string
-                example: "Jon"
+                example: "Jon Doe"
               level:
                 description: Acamedic level of a student
                 type: string
