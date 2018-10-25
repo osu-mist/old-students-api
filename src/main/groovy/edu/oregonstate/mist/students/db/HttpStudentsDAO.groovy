@@ -38,11 +38,13 @@ class HttpStudentsDAO {
     private final String studentsEndpoint = "students"
     private final String accountBalanceEndpoint = "account-balances"
     private final String accountTransactionsEndpoint = "account-transactions"
+    private final String academicLevelsEndpoint = "academic-levels"
     private final String academicStandingsEndpoint = "gpa-academic-standings"
     private final String gradesEndpoint = "grades"
     private final String classSchedulesEndpoint = "class-schedules"
     private final String holdsEndpoint = "holds"
-    private final String personIdentifications = "person-identifications"
+    private final String personIdentificationsEndpoint = "person-identifications"
+    private final String studentClassificationsEndpoint = "student-classifications"
 
     private static Logger logger = LoggerFactory.getLogger(this)
 
@@ -53,38 +55,45 @@ class HttpStudentsDAO {
         this.baseURI = UriBuilder.fromUri(endpoint).path("/api").build()
     }
 
-    protected List<String> getGuids(String bannerId) {
-        String response = getResponse(personIdentifications, ['bannerId': bannerId])
-        List<String> guids = []
+    protected String getPersonsGuid(String bannerId) {
+        String rawResponse = getResponse(personIdentificationsEndpoint, ['bannerId': bannerId])
 
         JsonSlurper jsonSlurper = new JsonSlurper()
-        jsonSlurper.parseText(response).each { item -> guids.add(item?.guid) }
+        def parsedResponse = jsonSlurper.parseText(rawResponse)
+        if (parsedResponse.size() == 1) { parsedResponse[0]['guid'] }
+    }
 
-        guids
+    protected String getAcademicLevel(String levelGUID) {
+        String rawResponse = getResponse("$academicLevelsEndpoint/$levelGUID")
 
+        JsonSlurper jsonSlurper = new JsonSlurper()
+        def parsedResponse = jsonSlurper.parseText(rawResponse)
+        parsedResponse['title']
+    }
+
+    protected String getClassification(String classGUID) {
+        String rawResponse = getResponse("$studentClassificationsEndpoint/$classGUID")
+
+        JsonSlurper jsonSlurper = new JsonSlurper()
+        def parsedResponse = jsonSlurper.parseText(rawResponse)
+        parsedResponse['title']
     }
 
     protected GeneralInfo getGeneralInfo(String id) {
-        List<String> guids = getGuids(id)
+        String personGUID = getPersonsGuid(id)
+        String rawResponse = getResponse(studentsEndpoint, ['person': personGUID])
+        String level, classification
 
-        println('*******')
-        println(guids)
-        println('*******')
-        List<String> responses = []
+        JsonSlurper jsonSlurper = new JsonSlurper()
+        def parsedResponse = jsonSlurper.parseText(rawResponse)
 
-        guids.each { guid ->
-            def res = getResponse("$studentsEndpoint/$guid")
-            println(">>>>>")
-            println(res)
-            println("<<<<<")
-            responses.add(res)
+        if (parsedResponse.size() == 1) {
+            def measures = parsedResponse[0]['measures'][0]
+            level = getAcademicLevel(measures['level']['id'])
+            classification = getClassification(measures['classification']['id'])
         }
 
-        println(responses)
-
-        def response = res
-
-        BackendGeneralInfo generalInfo = objectMapper.readValue(response, BackendGeneralInfo)
+        BackendGeneralInfo generalInfo = ['level': level, 'classification': classification]
 
         GeneralInfo.fromBackendGeneralInfo(generalInfo)
     }
@@ -304,6 +313,7 @@ class BackendAcademicStanding {
 @JsonIgnoreProperties(ignoreUnknown = true)
 class BackendGeneralInfo {
     String level
+    String classification
 }
 
 @JsonIgnoreProperties(ignoreUnknown = true)
