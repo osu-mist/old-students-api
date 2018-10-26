@@ -602,7 +602,7 @@ definitions:
                   items:
                     properties:
                       osuID:
-                        description: Persons ID for the faculty.
+                        description: Person ID for the faculty.
                         type: string
                         example: "937654321"
                       name:
