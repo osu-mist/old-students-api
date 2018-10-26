@@ -343,22 +343,6 @@ definitions:
             example: "general"
           attributes:
             properties:
-              firstName:
-                description: First name of a student
-                type: string
-                example: "John"
-              middleName:
-                description: Middle name of a student
-                type: string
-                example: null
-              lastName:
-                description: Last name of a student
-                type: string
-                example: "Doe"
-              fullName:
-                description: First name of a student
-                type: string
-                example: "Jon Doe"
               level:
                 description: Acamedic level of a student
                 type: string
@@ -372,7 +356,6 @@ definitions:
                   - "Professional"
                   - "Cascades Partner"
                   - "Cascades Partner Grad Course"
-                  - "Obsolete - Do not use"
                   - "E-Campus Undergraduate Course"
                   - "E-Campus Graduate Course"
                   - "E-Campus Overlay Course"
@@ -619,7 +602,7 @@ definitions:
                   items:
                     properties:
                       osuID:
-                        description: Person ID for the faculty.
+                        description: Persons ID for the faculty.
                         type: string
                         example: "937654321"
                       name:

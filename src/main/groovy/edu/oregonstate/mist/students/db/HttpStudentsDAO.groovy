@@ -10,12 +10,13 @@ import edu.oregonstate.mist.students.core.AcademicStatus
 import edu.oregonstate.mist.students.core.AccountBalance
 import edu.oregonstate.mist.students.core.AccountTransactions
 import edu.oregonstate.mist.students.core.ClassSchedule
-import edu.oregonstate.mist.students.core.GeneralInfo
+import edu.oregonstate.mist.students.core.Classification
 import edu.oregonstate.mist.students.core.GPALevels
 import edu.oregonstate.mist.students.core.Grade
 import edu.oregonstate.mist.students.core.Holds
+import edu.oregonstate.mist.students.core.Measure
 import groovy.transform.InheritConstructors
-import groovy.json.JsonSlurper
+import groovyx.gpars.GParsPool
 import org.apache.http.HttpHeaders
 import org.apache.http.HttpResponse
 import org.apache.http.HttpStatus
@@ -55,8 +56,8 @@ class HttpStudentsDAO {
         this.baseURI = UriBuilder.fromUri(endpoint).path("/api").build()
     }
 
-    protected Map getPerson(String bannerId) {
-        String personResponse = getResponse(personIdentificationsEndpoint, ["bannerId": bannerId])
+    protected Map getPerson(String id) {
+        String personResponse = getResponse(personIdentificationsEndpoint, ["bannerId": id])
 
         if (personResponse == '[]') {
             String message = "Student not found"
@@ -65,50 +66,58 @@ class HttpStudentsDAO {
             throw new StudentNotFoundException(message)
         }
 
-        JsonSlurper jsonSlurper = new JsonSlurper()
-        def person = jsonSlurper.parseText(personResponse)
-        if (person.size() == 1) { person[0] }
+        List<Map> backendPersons = objectMapper.readValue(
+            personResponse, new TypeReference<List<Map>>() {})
+
+        if (backendPersons.size() == 1) { backendPersons[0] }
     }
 
     protected String getFieldbyId(String endpoint, String id, String field) {
         String rawResponse = getResponse("$endpoint/$id")
 
-        JsonSlurper jsonSlurper = new JsonSlurper()
-        def parsedResponse = jsonSlurper.parseText(rawResponse)
-        parsedResponse[field]
+        Map map = objectMapper.readValue(rawResponse, new TypeReference<Map<String,Object>>(){})
+
+        map[field]
     }
 
-    protected GeneralInfo getGeneralInfo(String id) {
-        JsonSlurper jsonSlurper = new JsonSlurper()
-
-        def person = getPerson(id)
+    protected Classification getClassification(String id) {
+        Map person = getPerson(id)
+        Map classificationMap = [:]
 
         String personGUID = person?.guid
-        String level = null
-        String classification = null
 
         String studentResponse = getResponse(studentsEndpoint, ["person": personGUID])
+        List<Map> backendStudents = objectMapper.readValue(
+            studentResponse, new TypeReference<List<Map>>() {}
+        )
 
-        def student = jsonSlurper.parseText(studentResponse)
+        if (backendStudents.size() == 1 && backendStudents[0]["measures"]) {
+            def backendMeasure = backendStudents[0]["measures"][0]
+            String levelId = backendMeasure?.level?.id
+            String classificationId = backendMeasure?.classification?.id
 
-        if (student.size() == 1 && student[0]["measures"]) {
-            def measures = student[0]["measures"][0]
-            String levelId = measures?.level?.id
-            String classificationId = measures?.classification?.id
-            level = getFieldbyId(academicLevelsEndpoint, levelId, "title")
-            classification = getFieldbyId(studentClassificationsEndpoint, classificationId, "title")
+            GParsPool.withPool {
+                [
+                    [ "key": "level",
+                      "endpoint": academicLevelsEndpoint,
+                      "id": levelId
+                    ],
+                    [ "key": "classification",
+                      "endpoint": studentClassificationsEndpoint,
+                      "id": classificationId
+                    ]
+                ].eachParallel {
+                    classificationMap.put(it.key, getFieldbyId(it.endpoint, it.id, "title"))
+                }
+            }
         }
 
-        BackendGeneralInfo generalInfo = [
-            "firstName": person?.firstName,
-            "middleName": person?.middleName,
-            "lastName": person?.lastName,
-            "fullName": person?.fullName,
-            "level": level,
-            "classification": classification
+        Measure measure = [
+            "level": classificationMap?.level,
+            "classification": classificationMap?.classification
         ]
 
-        GeneralInfo.fromBackendGeneralInfo(generalInfo)
+        Classification.fromMeasure(measure)
     }
 
     protected AccountBalance getAccountBalance(String id) {
@@ -142,7 +151,7 @@ class HttpStudentsDAO {
     }
 
     protected List<AcademicStatus> getAcademicStatus(String id, String term) {
-        String response = getResponse(getAcademicStandingsEndpoint(id), ["term": term])
+        String response = getResponse(getAcademicStandingsEndpoint(id), getTermParameterMap(term))
 
         def unmappedResponse = objectMapper.readValue(response,
                 new TypeReference<List<HashMap>>() {})
@@ -153,8 +162,8 @@ class HttpStudentsDAO {
 
         if (term && academicStanding.size() == 1
                 && academicStanding[0].academicStandingTerm != term) {
-            // When querying with a valid term that the student doesn"t have data for, the backend
-            // API will return with a malformed academic standing object. The best way I"ve found to
+            // When querying with a valid term that the student doesn't have data for, the backend
+            // API will return with a malformed academic standing object. The best way I've found to
             // know that the object is malformed is to compare the term against the term used in the
             // query. If they differ, return an empty object to reflect that the student and term is
             // valid, but no data exists for the given term.
@@ -165,7 +174,9 @@ class HttpStudentsDAO {
     }
 
     protected List<Grade> getGrades(String id, String term) {
-        String response = getResponse(getStudentsEndpoint(id, gradesEndpoint), ["term": term])
+        String response = getResponse(
+            getStudentsEndpoint(id, gradesEndpoint), getTermParameterMap(term)
+        )
 
         List<BackendGrade> grades = objectMapper.readValue(
                 response, new TypeReference<List<BackendGrade>>() {})
@@ -175,7 +186,7 @@ class HttpStudentsDAO {
 
     protected List<ClassSchedule> getClassSchedule(String id, String term) {
         String response = getResponse(
-            getStudentsEndpoint(id, classSchedulesEndpoint), ["term": term]
+            getStudentsEndpoint(id, classSchedulesEndpoint), getTermParameterMap(term)
         )
 
         def unmappedResponse = objectMapper.readValue(response,
@@ -279,6 +290,10 @@ class HttpStudentsDAO {
     static String getDescription(Map<String, String> map) {
         map.get("description")
     }
+
+    static Map getTermParameterMap(String term) {
+        ["term": term]
+    }
 }
 
 @InheritConstructors
@@ -321,16 +336,6 @@ class BackendAcademicStanding {
     String academicStandingTerm
     String academicStandingTermDescription
     List<BackendGPA> termGPAs
-}
-
-@JsonIgnoreProperties(ignoreUnknown = true)
-class BackendGeneralInfo {
-    String firstName
-    String middleName
-    String lastName
-    String fullName
-    String level
-    String classification
 }
 
 @JsonIgnoreProperties(ignoreUnknown = true)

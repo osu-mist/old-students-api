@@ -8,9 +8,9 @@ import edu.oregonstate.mist.students.core.AcademicStatus
 import edu.oregonstate.mist.students.core.AccountBalance
 import edu.oregonstate.mist.students.core.AccountTransactions
 import edu.oregonstate.mist.students.core.ClassSchedule
+import edu.oregonstate.mist.students.core.Classification
 import edu.oregonstate.mist.students.core.DualEnrollment
 import edu.oregonstate.mist.students.core.GPALevels
-import edu.oregonstate.mist.students.core.GeneralInfo
 import edu.oregonstate.mist.students.core.Grade
 import edu.oregonstate.mist.students.core.Holds
 import edu.oregonstate.mist.students.core.WorkStudyObject
@@ -109,12 +109,12 @@ class StudentsResource extends Resource {
 
     @Timed
     @GET
-    @Path ('{osuID: [0-9a-zA-Z-]+}/general')
-    Response getGeneralInfo(@PathParam("osuID") String osuID) {
-        GeneralInfo generalInfo
+    @Path ('{osuID: [0-9a-zA-Z-]+}/classification')
+    Response getClassification(@PathParam("osuID") String osuID) {
+        Classification classification
 
         try {
-            generalInfo = studentsDAOWrapper.getGeneralInfo(osuID)
+            classification = studentsDAOWrapper.getClassification(osuID)
         } catch (StudentNotFoundException e) {
             return notFound().build()
         }
@@ -123,8 +123,8 @@ class StudentsResource extends Resource {
             links: getSelfLink(uriBuilder.genericUri("general", osuID)),
             data: new ResourceObject(
                 id: osuID,
-                type: "general",
-                attributes: generalInfo,
+                type: "classification",
+                attributes: classification,
                 links: getSelfLink(null)
             )
         )

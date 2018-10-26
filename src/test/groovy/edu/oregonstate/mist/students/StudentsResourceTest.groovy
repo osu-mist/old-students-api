@@ -3,8 +3,8 @@ package edu.oregonstate.mist.students
 import edu.oregonstate.mist.api.ErrorResultObject
 import edu.oregonstate.mist.api.jsonapi.ResultObject
 import edu.oregonstate.mist.students.core.ClassSchedule
+import edu.oregonstate.mist.students.core.Classification
 import edu.oregonstate.mist.students.core.DualEnrollment
-import edu.oregonstate.mist.students.core.GeneralInfo
 import edu.oregonstate.mist.students.core.Grade
 import edu.oregonstate.mist.students.core.WorkStudyObject
 import edu.oregonstate.mist.students.db.InvalidTermException
@@ -24,39 +24,37 @@ class StudentsResourceTest {
     private final String invalidTermErrorMessage = "Term is invalid."
 
     @Test
-    void badOsuIDShouldReturnNotFoundGeneralInfo() {
+    void badOsuIDShouldReturnNotFoundClassification() {
         def mockDAOWrapper = getMockDAOWrapper()
 
-        mockDAOWrapper.demand.getGeneralInfo() {
+        mockDAOWrapper.demand.getClassification() {
             String osuID -> throw new StudentNotFoundException()
         }
 
         mockDAOWrapper.use {
             StudentsResource studentsResource = getStudentsResource()
-            checkErrorResponse(studentsResource.getGeneralInfo(
+            checkErrorResponse(studentsResource.getClassification(
                 TestHelperObjects.fakeID), 404, null)
         }
     }
 
     @Test
-    void testValidGeneralInfo() {
+    void testValidClassification() {
         def mockDAOWrapper = getMockDAOWrapper()
 
-        GeneralInfo testGeneralInfo = new GeneralInfo(
-            firstName: "John",
-            middleName: null,
-            lastName: "Doe",
-            fullName: "Jon Doe",
+        Classification testClassification = new Classification(
             level: "Undergraduate",
             classification: "Sophomore"
         )
 
-        mockDAOWrapper.demand.getGeneralInfo() { String id -> testGeneralInfo }
+        mockDAOWrapper.demand.getClassification() { String id -> testClassification }
 
         mockDAOWrapper.use {
             StudentsResource studentsResource = getStudentsResource()
-            Response response = studentsResource.getGeneralInfo(TestHelperObjects.fakeID)
-            responseChecker(response, testGeneralInfo, "${TestHelperObjects.fakeID}", "general")
+            Response response = studentsResource.getClassification(TestHelperObjects.fakeID)
+            responseChecker(
+                response, testClassification, "${TestHelperObjects.fakeID}", "classification"
+            )
         }
     }
 
