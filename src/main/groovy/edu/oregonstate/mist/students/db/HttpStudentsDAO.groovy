@@ -67,7 +67,8 @@ class HttpStudentsDAO {
         }
 
         List<Map> backendPersons = objectMapper.readValue(
-            personResponse, new TypeReference<List<Map>>() {})
+            personResponse, new TypeReference<List<Map>>() {}
+        )
 
         if (backendPersons.size() == 1) { backendPersons[0] }
     }
@@ -245,7 +246,12 @@ class HttpStudentsDAO {
 
             logger.info("400 response from backend data source. Error messages: $errorMessages")
 
-            if (errorMessages.contains("Term not found")) {
+            List<String> expectedBadTerms = [
+                "Term not found",
+                "Term is required for RESTful request"
+            ]
+
+            if (expectedBadTerms.any { it -> errorMessages.contains(it) }) {
                 def term = params?.term
                 String message = "Term: $term is invalid."
                 logger.info(message)

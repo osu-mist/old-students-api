@@ -85,7 +85,7 @@ paths:
           description: Student not found
           schema:
             $ref: '#/definitions/Error'
-  /students/{osuID}/general:
+  /students/{osuID}/classification:
     get:
       description: Get a student's genral information
       parameters:
@@ -96,7 +96,7 @@ paths:
         200:
           description: Successful response
           schema:
-            $ref: '#/definitions/GeneralInfoResultObject'
+            $ref: '#/definitions/ClassificationResultObject'
         404:
           description: Student not found
           schema:
@@ -330,7 +330,7 @@ definitions:
                     $ref: '#/definitions/GradePointAverageObject'
             links:
               $ref: "#/definitions/NullSelfLink"
-  GeneralInfoResultObject:
+  ClassificationResultObject:
     properties:
       links:
         $ref: "#/definitions/SelfLink"
@@ -340,7 +340,7 @@ definitions:
             $ref: "#/definitions/StudentID"
           type:
             type: string
-            example: "general"
+            example: "classification"
           attributes:
             properties:
               level:
