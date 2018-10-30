@@ -107,6 +107,3 @@ class StudentNotFoundException extends Exception {}
 
 @InheritConstructors
 class InvalidTermException extends Exception {}
-
-@InheritConstructors
-class TermRequiredException extends Exception {}
