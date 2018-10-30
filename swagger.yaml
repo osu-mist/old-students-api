@@ -87,7 +87,7 @@ paths:
             $ref: '#/definitions/Error'
   /students/{osuID}/classification:
     get:
-      description: Get a student's genral information
+      description: Get a student's classification information
       parameters:
         - $ref: '#/parameters/osuID'
         - $ref: '#/parameters/pretty'

@@ -246,14 +246,18 @@ class HttpStudentsDAO {
 
             logger.info("400 response from backend data source. Error messages: $errorMessages")
 
-            List<String> expectedBadTerms = [
-                "Term not found",
-                "Term is required for RESTful request"
-            ]
-
-            if (expectedBadTerms.any { it -> errorMessages.contains(it) }) {
+            if (errorMessages.contains("Term not found")) {
+                String message
                 def term = params?.term
-                String message = "Term: $term is invalid."
+
+                if (term == null) {
+                    message = "Term is not given but caught an unexpected 'Term not found' error."
+                    logger.info(message)
+
+                    throw new Exception(message)
+                }
+
+                message = "Term: $term is invalid."
                 logger.info(message)
 
                 throw new InvalidTermException(message)

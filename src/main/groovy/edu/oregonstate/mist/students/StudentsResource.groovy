@@ -120,7 +120,7 @@ class StudentsResource extends Resource {
         }
 
         ResultObject resultObject = new ResultObject(
-            links: getSelfLink(uriBuilder.genericUri("general", osuID)),
+            links: getSelfLink(uriBuilder.genericUri("classification", osuID)),
             data: new ResourceObject(
                 id: osuID,
                 type: "classification",
