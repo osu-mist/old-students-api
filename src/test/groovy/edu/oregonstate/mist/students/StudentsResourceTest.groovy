@@ -3,6 +3,7 @@ package edu.oregonstate.mist.students
 import edu.oregonstate.mist.api.ErrorResultObject
 import edu.oregonstate.mist.api.jsonapi.ResultObject
 import edu.oregonstate.mist.students.core.ClassSchedule
+import edu.oregonstate.mist.students.core.Classification
 import edu.oregonstate.mist.students.core.DualEnrollment
 import edu.oregonstate.mist.students.core.Grade
 import edu.oregonstate.mist.students.core.WorkStudyObject
@@ -21,6 +22,41 @@ import static org.junit.Assert.assertNotNull
 class StudentsResourceTest {
     private final URI endpointUri = new URI("https://www.foo.com/")
     private final String invalidTermErrorMessage = "Term is invalid."
+
+    @Test
+    void badOsuIDShouldReturnNotFoundClassification() {
+        def mockDAOWrapper = getMockDAOWrapper()
+
+        mockDAOWrapper.demand.getClassification() {
+            String osuID -> throw new StudentNotFoundException()
+        }
+
+        mockDAOWrapper.use {
+            StudentsResource studentsResource = getStudentsResource()
+            checkErrorResponse(studentsResource.getClassification(
+                TestHelperObjects.fakeID), 404, null)
+        }
+    }
+
+    @Test
+    void testValidClassification() {
+        def mockDAOWrapper = getMockDAOWrapper()
+
+        Classification testClassification = new Classification(
+            level: "Undergraduate",
+            classification: "Sophomore"
+        )
+
+        mockDAOWrapper.demand.getClassification() { String id -> testClassification }
+
+        mockDAOWrapper.use {
+            StudentsResource studentsResource = getStudentsResource()
+            Response response = studentsResource.getClassification(TestHelperObjects.fakeID)
+            responseChecker(
+                response, testClassification, "${TestHelperObjects.fakeID}", "classification"
+            )
+        }
+    }
 
     @Test
     void badOsuIDShouldReturnNotFoundDualEnrollment() {

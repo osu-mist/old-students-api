@@ -4,6 +4,7 @@ import edu.oregonstate.mist.students.core.AcademicStatus
 import edu.oregonstate.mist.students.core.AccountBalance
 import edu.oregonstate.mist.students.core.AccountTransactions
 import edu.oregonstate.mist.students.core.ClassSchedule
+import edu.oregonstate.mist.students.core.Classification
 import edu.oregonstate.mist.students.core.DualEnrollment
 import edu.oregonstate.mist.students.core.GPALevels
 import edu.oregonstate.mist.students.core.Grade
@@ -58,6 +59,10 @@ class StudentsDAOWrapper {
      */
     public WorkStudyObject getWorkStudy(String osuID) {
         new WorkStudyObject(awards: studentsDAO.getWorkStudy(getPersonID(osuID)))
+    }
+
+    public Classification getClassification(String osuID) {
+        httpStudentsDAO.getClassification(osuID)
     }
 
     public AccountBalance getAccountBalance(String osuID) {

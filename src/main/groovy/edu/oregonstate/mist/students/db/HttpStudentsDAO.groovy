@@ -10,10 +10,13 @@ import edu.oregonstate.mist.students.core.AcademicStatus
 import edu.oregonstate.mist.students.core.AccountBalance
 import edu.oregonstate.mist.students.core.AccountTransactions
 import edu.oregonstate.mist.students.core.ClassSchedule
+import edu.oregonstate.mist.students.core.Classification
 import edu.oregonstate.mist.students.core.GPALevels
 import edu.oregonstate.mist.students.core.Grade
 import edu.oregonstate.mist.students.core.Holds
+import edu.oregonstate.mist.students.core.Measure
 import groovy.transform.InheritConstructors
+import groovyx.gpars.GParsPool
 import org.apache.http.HttpHeaders
 import org.apache.http.HttpResponse
 import org.apache.http.HttpStatus
@@ -36,10 +39,13 @@ class HttpStudentsDAO {
     private final String studentsEndpoint = "students"
     private final String accountBalanceEndpoint = "account-balances"
     private final String accountTransactionsEndpoint = "account-transactions"
+    private final String academicLevelsEndpoint = "academic-levels"
     private final String academicStandingsEndpoint = "gpa-academic-standings"
     private final String gradesEndpoint = "grades"
     private final String classSchedulesEndpoint = "class-schedules"
     private final String holdsEndpoint = "holds"
+    private final String personIdentificationsEndpoint = "person-identifications"
+    private final String studentClassificationsEndpoint = "student-classifications"
 
     private static Logger logger = LoggerFactory.getLogger(this)
 
@@ -48,6 +54,71 @@ class HttpStudentsDAO {
     HttpStudentsDAO(HttpClient httpClient, String endpoint) {
         this.httpClient = httpClient
         this.baseURI = UriBuilder.fromUri(endpoint).path("/api").build()
+    }
+
+    protected Map getPerson(String id) {
+        String personResponse = getResponse(personIdentificationsEndpoint, ["bannerId": id])
+
+        if (personResponse == '[]') {
+            String message = "Student not found"
+            logger.info(message)
+
+            throw new StudentNotFoundException(message)
+        }
+
+        List<Map> backendPersons = objectMapper.readValue(
+            personResponse, new TypeReference<List<Map>>() {}
+        )
+
+        if (backendPersons.size() == 1) { backendPersons[0] }
+    }
+
+    protected String getFieldbyId(String endpoint, String id, String field) {
+        String rawResponse = getResponse("$endpoint/$id")
+
+        Map map = objectMapper.readValue(rawResponse, new TypeReference<Map<String,Object>>(){})
+
+        map[field]
+    }
+
+    protected Classification getClassification(String id) {
+        Map person = getPerson(id)
+        Map classificationMap = [:]
+
+        String personGUID = person?.guid
+
+        String studentResponse = getResponse(studentsEndpoint, ["person": personGUID])
+        List<Map> backendStudents = objectMapper.readValue(
+            studentResponse, new TypeReference<List<Map>>() {}
+        )
+
+        if (backendStudents.size() == 1 && backendStudents[0]["measures"]) {
+            def backendMeasure = backendStudents[0]["measures"][0]
+            String levelId = backendMeasure?.level?.id
+            String classificationId = backendMeasure?.classification?.id
+
+            GParsPool.withPool {
+                [
+                    [ "key": "level",
+                      "endpoint": academicLevelsEndpoint,
+                      "id": levelId
+                    ],
+                    [ "key": "classification",
+                      "endpoint": studentClassificationsEndpoint,
+                      "id": classificationId
+                    ]
+                ].eachParallel {
+                    classificationMap.put(it.key, getFieldbyId(it.endpoint, it.id, "title"))
+                }
+            }
+        }
+
+        Measure measure = [
+            "level": classificationMap?.level,
+            "classification": classificationMap?.classification
+        ]
+
+        Classification.fromMeasure(measure)
     }
 
     protected AccountBalance getAccountBalance(String id) {
@@ -81,7 +152,7 @@ class HttpStudentsDAO {
     }
 
     protected List<AcademicStatus> getAcademicStatus(String id, String term) {
-        String response = getResponse(getAcademicStandingsEndpoint(id), term)
+        String response = getResponse(getAcademicStandingsEndpoint(id), getTermParameterMap(term))
 
         def unmappedResponse = objectMapper.readValue(response,
                 new TypeReference<List<HashMap>>() {})
@@ -104,7 +175,9 @@ class HttpStudentsDAO {
     }
 
     protected List<Grade> getGrades(String id, String term) {
-        String response = getResponse(getStudentsEndpoint(id, gradesEndpoint), term)
+        String response = getResponse(
+            getStudentsEndpoint(id, gradesEndpoint), getTermParameterMap(term)
+        )
 
         List<BackendGrade> grades = objectMapper.readValue(
                 response, new TypeReference<List<BackendGrade>>() {})
@@ -113,7 +186,9 @@ class HttpStudentsDAO {
     }
 
     protected List<ClassSchedule> getClassSchedule(String id, String term) {
-        String response = getResponse(getStudentsEndpoint(id, classSchedulesEndpoint), term)
+        String response = getResponse(
+            getStudentsEndpoint(id, classSchedulesEndpoint), getTermParameterMap(term)
+        )
 
         def unmappedResponse = objectMapper.readValue(response,
                 new TypeReference<List<HashMap>>() {})
@@ -134,12 +209,14 @@ class HttpStudentsDAO {
         Holds.fromBackendHolds(holds)
     }
 
-    private String getResponse(String endpoint, String term = null) {
+    private String getResponse(String endpoint, Map params=null) {
         UriBuilder uriBuilder = UriBuilder.fromUri(baseURI)
         uriBuilder.path(endpoint)
 
-        if (term) {
-            uriBuilder.queryParam("term", term)
+        params.each { key, value ->
+            if (value != null) {
+                uriBuilder.queryParam(key, value)
+            }
         }
 
         URI requestURI = uriBuilder.build()
@@ -170,7 +247,17 @@ class HttpStudentsDAO {
             logger.info("400 response from backend data source. Error messages: $errorMessages")
 
             if (errorMessages.contains("Term not found")) {
-                String message = "Term: $term is invalid."
+                String message
+                def term = params?.term
+
+                if (term == null) {
+                    message = "Term is not given but caught an unexpected 'Term not found' error."
+                    logger.info(message)
+
+                    throw new Exception(message)
+                }
+
+                message = "Term: $term is invalid."
                 logger.info(message)
 
                 throw new InvalidTermException(message)
@@ -212,6 +299,10 @@ class HttpStudentsDAO {
 
     static String getDescription(Map<String, String> map) {
         map.get("description")
+    }
+
+    static Map getTermParameterMap(String term) {
+        ["term": term]
     }
 }
 

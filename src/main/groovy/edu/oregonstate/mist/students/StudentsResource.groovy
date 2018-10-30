@@ -8,6 +8,7 @@ import edu.oregonstate.mist.students.core.AcademicStatus
 import edu.oregonstate.mist.students.core.AccountBalance
 import edu.oregonstate.mist.students.core.AccountTransactions
 import edu.oregonstate.mist.students.core.ClassSchedule
+import edu.oregonstate.mist.students.core.Classification
 import edu.oregonstate.mist.students.core.DualEnrollment
 import edu.oregonstate.mist.students.core.GPALevels
 import edu.oregonstate.mist.students.core.Grade
@@ -101,6 +102,31 @@ class StudentsResource extends Resource {
                         attributes: workStudyObject,
                         links: getSelfLink(null)
                 )
+        )
+
+        ok(resultObject).build()
+    }
+
+    @Timed
+    @GET
+    @Path ('{osuID: [0-9a-zA-Z-]+}/classification')
+    Response getClassification(@PathParam("osuID") String osuID) {
+        Classification classification
+
+        try {
+            classification = studentsDAOWrapper.getClassification(osuID)
+        } catch (StudentNotFoundException e) {
+            return notFound().build()
+        }
+
+        ResultObject resultObject = new ResultObject(
+            links: getSelfLink(uriBuilder.genericUri("classification", osuID)),
+            data: new ResourceObject(
+                id: osuID,
+                type: "classification",
+                attributes: classification,
+                links: getSelfLink(null)
+            )
         )
 
         ok(resultObject).build()
