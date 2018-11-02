@@ -352,9 +352,32 @@ class StudentsResourceTest {
 
     @Test
     void noTermShouldReturnBadRequestClassSchedule() {
-        StudentsResource studentsResource = getStudentsResource()
-        checkErrorResponse(studentsResource.getClassSchedule(
-                TestHelperObjects.fakeID, null), 400, "Term (query parameter) is required.")
+        def mockDAOWrapper = getMockDAOWrapper()
+
+        mockDAOWrapper.demand.getClassSchedule() { String id, String term ->
+            TestHelperObjects.fakeSchedule
+        }
+
+        mockDAOWrapper.use {
+            StudentsResource studentsResource = getStudentsResource()
+            checkErrorResponse(studentsResource.getClassSchedule(
+                    TestHelperObjects.fakeID, null), 400, "Term (query parameter) is required.")
+        }
+    }
+
+    @Test
+    void noTermAndUnknownStudentShouldReturnNotFound() {
+        def mockDAOWrapper = getMockDAOWrapper()
+
+        mockDAOWrapper.demand.getClassSchedule() { String osuID, String term ->
+            throw new StudentNotFoundException()
+        }
+
+        mockDAOWrapper.use {
+            StudentsResource studentsResource = getStudentsResource()
+            checkErrorResponse(studentsResource.getClassSchedule(
+                    TestHelperObjects.fakeID, null), 404, null)
+        }
     }
 
     @Test
