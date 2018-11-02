@@ -21,6 +21,7 @@ class integration_tests(unittest.TestCase):
         base_url = config_file_json["hostname"] + "v1/students"
         cls.osu_id = config_file_json["osu_id"]
         cls.url_with_id = f"{base_url}/{cls.osu_id}"
+        cls.class_schedule_term = config_file_json["class_schedule_term"]
 
         client_id = config_file_json["client_id"]
         client_secret = config_file_json["client_secret"]
@@ -55,7 +56,7 @@ class integration_tests(unittest.TestCase):
         request = requests.get(url, params=params, headers=self.auth_header)
 
         self.assert_response_time(request, response_time)
-        self.assertEqual(url, request.json()["links"]["self"])
+        self.assertEqual(request.url, request.json()["links"]["self"])
 
         return request
 
@@ -70,20 +71,35 @@ class integration_tests(unittest.TestCase):
         logging.debug("Request took {} second(s)".format(elapsed_seconds))
         self.assertLess(elapsed_seconds, max_elapsed_seconds)
 
+    def assert_id_matches(self, resource_object):
+        self.assertEqual(self.osu_id, resource_object["id"])
+
     def assert_object_matches_spec(self, properties, actual):
         self.assertEqual(len(properties), len(actual))
 
         for field, field_properties in properties.items():
+            self.assertIn(field, actual)
+
+            # If the field in the response is null, skip the rest the iteration
+            if actual[field] is None:
+                continue
+
             expected_type = self.__openapi_type(field_properties)
             self.assertIsInstance(actual[field], expected_type)
 
             if expected_type == str and "format" in field_properties:
                 format = field_properties["format"]
+
+                # Make sure dates as formatted correctly
                 if format == "date-time":
                     self.assert_date_format(actual[field],
                                             "%Y-%m-%dT%H:%M:%SZ")
                 elif format == "date":
                     self.assert_date_format(actual[field], "%Y-%m-%d")
+
+            # Make sure the returned value is in the documented list of values
+            if "enum" in field_properties:
+                self.assertIn(actual[field], field_properties["enum"])
 
     @staticmethod
     def __openapi_type(properties):
@@ -104,6 +120,14 @@ class integration_tests(unittest.TestCase):
     def __get_properties(self, object_title):
         return self.api_spec["definitions"][object_title]["properties"]
 
+    def __get_properties_for_one_of_one(self, object_title):
+        return self.__get_properties(
+            object_title)["data"]["properties"]["attributes"]["properties"]
+
+    def __get_properties_for_one_of_many(self, object_title):
+        return self.__get_properties(object_title)["data"]["items"][
+            "properties"]["attributes"]["properties"]
+
     def test_account_balance(self):
         request = self.__make_request("account-balance", 4)
         resource_object = request.json()["data"]
@@ -111,8 +135,8 @@ class integration_tests(unittest.TestCase):
 
         attributes = resource_object["attributes"]
 
-        properties = self.__get_properties("AccountBalanceResultObject")[
-            "data"]["properties"]["attributes"]["properties"]
+        properties = self.__get_properties_for_one_of_one(
+            "AccountBalanceResultObject")
 
         self.assert_object_matches_spec(properties, attributes)
 
@@ -123,8 +147,8 @@ class integration_tests(unittest.TestCase):
 
         attributes = resource_object["attributes"]
 
-        properties = self.__get_properties("AccountTransactionsResultObject")[
-            "data"]["properties"]["attributes"]["properties"]
+        properties = self.__get_properties_for_one_of_one(
+            "AccountTransactionsResultObject")
 
         self.assert_object_matches_spec(properties, attributes)
 
@@ -139,8 +163,8 @@ class integration_tests(unittest.TestCase):
 
         attributes = resource_object["attributes"]
 
-        properties = self.__get_properties("GradePointAverageResultObject")[
-            "data"]["properties"]["attributes"]["properties"]
+        properties = self.__get_properties_for_one_of_one(
+            "GradePointAverageResultObject")
 
         self.assert_object_matches_spec(properties, attributes)
 
@@ -157,14 +181,60 @@ class integration_tests(unittest.TestCase):
             term = attributes["term"]
             self.assertEqual(f"{self.osu_id}-{term}", resource_object["id"])
 
-            properties = self.__get_properties("AcademicStatusResultObject")[
+            properties = self.__get_properties_for_one_of_many(
+                "AcademicStatusResultObject")
+
+            self.assert_object_matches_spec(properties, attributes)
+
+            for gpa_level in attributes["gpa"]:
+                self.assert_object_matches_spec(
+                    self.__get_properties("GradePointAverageObject"),
+                    gpa_level)
+
+    def test_classification(self):
+        request = self.__make_request("classification", 6)
+        resource_object = request.json()["data"]
+        self.assertEqual(self.osu_id, resource_object["id"])
+
+        attributes = resource_object["attributes"]
+
+        properties = self.__get_properties_for_one_of_one(
+            "ClassificationResultObject")
+
+        self.assert_object_matches_spec(properties, attributes)
+
+    def test_grades(self):
+        request = self.__make_request("grades", 6)
+        resource_objects = request.json()["data"]
+
+        for resource_object in resource_objects:
+            attributes = resource_object["attributes"]
+            term = attributes["term"]
+            crn = attributes["courseReferenceNumber"]
+            self.assertEqual(f"{self.osu_id}-{term}-{crn}",
+                             resource_object["id"])
+
+            properties = self.__get_properties("GradesResultObject")["data"][
+                "items"]["properties"]["attributes"]["properties"]
+
+            self.assert_object_matches_spec(properties, attributes)
+
+    def test_class_schedule(self):
+        request = self.__make_request("class-schedule", 5,
+                                      {"term": self.class_schedule_term})
+        resource_objects = request.json()["data"]
+
+        for resource_object in resource_objects:
+            attributes = resource_object["attributes"]
+            term = attributes["term"]
+            crn = attributes["courseReferenceNumber"]
+            self.assertEqual(f"{self.osu_id}-{term}-{crn}",
+                             resource_object["id"])
+
+            properties = self.__get_properties("ClassScheduleResultObject")[
                 "data"]["items"]["properties"]["attributes"]["properties"]
 
             self.assert_object_matches_spec(properties, attributes)
-            for gpa_level in attributes["gpa"]:
-                self.assert_object_matches_spec(
-                    self.__get_properties("GradePointAverageObject"), gpa_level)
-
 
 
 if __name__ == '__main__':
