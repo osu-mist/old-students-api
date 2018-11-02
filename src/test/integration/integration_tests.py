@@ -12,7 +12,7 @@ from random import randint
 
 class integration_tests(unittest.TestCase):
 
-    # Set class variables related to configurations for tests
+    # Set class variables for tests
     @classmethod
     def setup(cls, config_file_path, open_api_path):
         with open(open_api_path, 'r') as yaml_stream:
@@ -52,13 +52,14 @@ class integration_tests(unittest.TestCase):
 
         return response["access_token"]
 
+    # Helper method to make a web request and lightly validate the response.
     def __make_request(self,
                        endpoint,
                        response_time,
                        status_code=200,
                        params=None):
         if status_code == 404:
-            # If a 404 is expected, send a bad ID
+            # If a 404 is expected, send a bad ID.
             url = f"{self.base_url}/93badID/{endpoint}"
         else:
             url = f"{self.url_with_id}/{endpoint}"
@@ -69,21 +70,26 @@ class integration_tests(unittest.TestCase):
         self.assertEqual(request.status_code, status_code)
 
         if status_code == 200:
+            # Only test self links for successful responses.
             self.assertEqual(request.url, request.json()["links"]["self"])
 
         return request
 
+    # Tests a date matches a desired format by attempting to parse it.
     def assert_date_format(self, date, date_format):
+        logging.debug(f"Raw date string: {date}.")
         try:
             datetime.strptime(date, date_format)
         except ValueError:
             self.fail(f"{date} does not match the format {date_format}")
 
+    # Tests a API call is within the acceptable response time.
     def assert_response_time(self, request, max_elapsed_seconds):
         elapsed_seconds = request.elapsed.total_seconds()
         logging.debug("Request took {} second(s)".format(elapsed_seconds))
         self.assertLess(elapsed_seconds, max_elapsed_seconds)
 
+    # Tests an error response and error message
     def assert_error_response(self, request, message):
         response = request.json()
         errors = response["errors"]
@@ -98,15 +104,20 @@ class integration_tests(unittest.TestCase):
             properties["errors"]["items"]["properties"], error)
         self.assertEqual(message, error["detail"])
 
+    # Main method for comparing an API response to the OpenAPI specification.
+    # Gets the expected value of the field, and compares the actual result.
     def assert_object_matches_spec(self, properties, actual):
         self.assertEqual(len(properties), len(actual))
 
         for field, field_properties in properties.items():
+            logging.debug(f"Testing field: {field}")
             self.assertIn(field, actual)
 
             expected_type = self.__openapi_type(field_properties)
+            logging.debug(f"Expected type: {expected_type}")
 
-            # If the field in the response is null and is not a dict, skip the rest the iteration
+            # If the field in the response is null and is not a dict,
+            # skip the rest the iteration.
             if actual[field] is None and expected_type != dict:
                 continue
 
@@ -126,42 +137,62 @@ class integration_tests(unittest.TestCase):
             if "enum" in field_properties:
                 self.assertIn(actual[field], field_properties["enum"])
 
-            # If the field is an object, evaluate the object
+            # If the field is an object, evaluate the object contents
             if expected_type == dict:
                 self.assert_object_matches_spec(field_properties["properties"],
                                                 actual[field])
 
+    # Mapping between OpenAPI data types and python data types
     @staticmethod
     def __openapi_type(properties):
         if "type" in properties:
             plain_type = properties["type"]
+            logging.debug(f"OpenAPI type: {plain_type}")
 
             if plain_type == "string":
                 return str
             elif plain_type == "integer":
                 return int
             elif plain_type == "number":
-                if properties["format"] == "float":
-                    return float
+                if "format" in properties:
+                    type_format = properties["format"]
+                    if type_format in ["float", "double"]:
+                        return float
+                    elif type_format in ["integer", "int32", "int64"]:
+                        return int
+                    else:
+                        # Treat int as default
+                        return int
+                else:
+                    # Treat int as default
+                    return int
             elif plain_type == "boolean":
                 return bool
             elif plain_type == "array":
                 return list
             elif plain_type == "object":
                 return dict
+            else:
+                logging.warn("Unrecognized OpenAPI data type.")
+                return None
         elif "properties" in properties:
-            # If a properties object exists but no type is give, default to dict
+            # If a properties object exists but no type is given,
+            # default to dict.
             return dict
         else:
+            logging.warn("OpenAPI property contains no type or properties.")
             return None
 
+    # Get the top level properties of an object in an OpenAPI spec.
     def __get_properties(self, object_title):
         return self.api_spec["definitions"][object_title]["properties"]
 
+    # Get the properties of a result object where "data" is an object.
     def __get_properties_for_one_of_one(self, object_title):
         return self.__get_properties(
             object_title)["data"]["properties"]["attributes"]["properties"]
 
+    # Get the properties of a result object where "data" is an array.
     def __get_properties_for_one_of_many(self, object_title):
         return self.__get_properties(object_title)["data"]["items"][
             "properties"]["attributes"]["properties"]
@@ -248,6 +279,7 @@ class integration_tests(unittest.TestCase):
             attributes = resource_object["attributes"]
             term = attributes["term"]
             crn = attributes["courseReferenceNumber"]
+            logging.debug(f"testing grades for term {term}, crn {crn}")
             self.assertEqual(f"{self.osu_id}-{term}-{crn}",
                              resource_object["id"])
 
@@ -265,6 +297,7 @@ class integration_tests(unittest.TestCase):
             attributes = resource_object["attributes"]
             term = attributes["term"]
             crn = attributes["courseReferenceNumber"]
+            logging.debug(f"testing class schedule for term {term}, crn {crn}")
             self.assertEqual(f"{self.osu_id}-{term}-{crn}",
                              resource_object["id"])
 
@@ -274,7 +307,7 @@ class integration_tests(unittest.TestCase):
             self.assert_object_matches_spec(properties, attributes)
 
     def test_class_schedule_no_term(self):
-        request = self.__make_request("class-schedule", 0.5, 400)
+        request = self.__make_request("class-schedule", 5, 400)
         self.assert_error_response(request,
                                    "Term (query parameter) is required.")
 
@@ -324,6 +357,7 @@ class integration_tests(unittest.TestCase):
         for resource_object in resource_objects:
             attributes = resource_object["attributes"]
             term = attributes["term"]
+            logging.debug(f"testing term {term} for dual enrollment")
             self.assertEqual(f"{self.osu_id}-{term}", resource_object["id"])
             self.assert_object_matches_spec(properties, attributes)
 
@@ -332,11 +366,12 @@ class integration_tests(unittest.TestCase):
 
         for endpoint in endpoints:
             resource = endpoint.split("/")[-1]
-            logging.info(resource)
+            logging.debug(f"testing {resource} returns 404")
             request = self.__make_request(resource, 4, 404)
             self.assert_error_response(
                 request,
-                "The information requested was not found. If this is incorrect, please contact application support."
+                "The information requested was not found. " +
+                "If this is incorrect, please contact application support."
             )
 
             # The same resource should work with a valid ID
