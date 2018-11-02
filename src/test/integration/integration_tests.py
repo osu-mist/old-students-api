@@ -148,6 +148,24 @@ class integration_tests(unittest.TestCase):
             self.assert_object_matches_spec(
                 self.__get_properties("GradePointAverageObject"), level)
 
+    def test_academic_status(self):
+        request = self.__make_request("academic-status", 4)
+        resource_objects = request.json()["data"]
+
+        for resource_object in resource_objects:
+            attributes = resource_object["attributes"]
+            term = attributes["term"]
+            self.assertEqual(f"{self.osu_id}-{term}", resource_object["id"])
+
+            properties = self.__get_properties("AcademicStatusResultObject")[
+                "data"]["items"]["properties"]["attributes"]["properties"]
+
+            self.assert_object_matches_spec(properties, attributes)
+            for gpa_level in attributes["gpa"]:
+                self.assert_object_matches_spec(
+                    self.__get_properties("GradePointAverageObject"), gpa_level)
+
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
