@@ -14,13 +14,19 @@ class integration_tests(unittest.TestCase):
 
     # Set class variables related to configurations for tests
     @classmethod
-    def set_configuration_variables(cls, configuration):
-        config_file_raw = open(configuration)
-        config_file_json = json.load(config_file_raw)
+    def setup(cls, config_file_path, open_api_path):
+        with open(open_api_path, 'r') as yaml_stream:
+            cls.api_spec = yaml.load(yaml_stream)
 
-        base_url = config_file_json["hostname"] + "v1/students"
+        with open(config_file_path, 'r') as json_stream:
+            config_file_json = json.load(json_stream)
+
+        cls.host = config_file_json["hostname"]
+        cls.base_path = cls.api_spec["basePath"]
         cls.osu_id = config_file_json["osu_id"]
-        cls.url_with_id = f"{base_url}/{cls.osu_id}"
+        cls.base_url = f"{cls.host}{cls.base_path}/students"
+        cls.url_with_id = f"{cls.base_url}/{cls.osu_id}"
+
         cls.class_schedule_term = config_file_json["class_schedule_term"]
 
         client_id = config_file_json["client_id"]
@@ -31,11 +37,6 @@ class integration_tests(unittest.TestCase):
 
         # Set headers and query parameters
         cls.auth_header = {'Authorization': 'Bearer {}'.format(access_token)}
-
-    @classmethod
-    def load_open_api_spec(cls, open_api_spec):
-        with open(open_api_spec, 'r') as stream:
-            cls.api_spec = yaml.load(stream)
 
     # Helper method to get an access token
     @staticmethod
@@ -56,7 +57,12 @@ class integration_tests(unittest.TestCase):
                        response_time,
                        status_code=200,
                        params=None):
-        url = f"{self.url_with_id}/{endpoint}"
+        if status_code == 404:
+            # If a 404 is expected, send a bad ID
+            url = f"{self.base_url}/93badID/{endpoint}"
+        else:
+            url = f"{self.url_with_id}/{endpoint}"
+
         request = requests.get(url, params=params, headers=self.auth_header)
 
         self.assert_response_time(request, response_time)
@@ -98,18 +104,12 @@ class integration_tests(unittest.TestCase):
         for field, field_properties in properties.items():
             self.assertIn(field, actual)
 
-            # If the field in the response is null, skip the rest the iteration
-            if actual[field] is None:
-                continue
-
-            # If the field is an object, evaluate the object
-            if "properties" in field_properties:
-                self.assertIsInstance(actual[field], object)
-                self.assert_object_matches_spec(field_properties["properties"],
-                                                actual[field])
-                continue
-
             expected_type = self.__openapi_type(field_properties)
+
+            # If the field in the response is null and is not a dict, skip the rest the iteration
+            if actual[field] is None and expected_type != dict:
+                continue
+
             self.assertIsInstance(actual[field], expected_type)
 
             if expected_type == str and "format" in field_properties:
@@ -126,21 +126,34 @@ class integration_tests(unittest.TestCase):
             if "enum" in field_properties:
                 self.assertIn(actual[field], field_properties["enum"])
 
+            # If the field is an object, evaluate the object
+            if expected_type == dict:
+                self.assert_object_matches_spec(field_properties["properties"],
+                                                actual[field])
+
     @staticmethod
     def __openapi_type(properties):
-        plain_type = properties["type"]
+        if "type" in properties:
+            plain_type = properties["type"]
 
-        if plain_type == "string":
-            return str
-        elif plain_type == "integer":
-            return int
-        elif plain_type == "number":
-            if properties["format"] == "float":
-                return float
-        elif plain_type == "boolean":
-            return bool
-        elif plain_type == "array":
-            return list
+            if plain_type == "string":
+                return str
+            elif plain_type == "integer":
+                return int
+            elif plain_type == "number":
+                if properties["format"] == "float":
+                    return float
+            elif plain_type == "boolean":
+                return bool
+            elif plain_type == "array":
+                return list
+            elif plain_type == "object":
+                return dict
+        elif "properties" in properties:
+            # If a properties object exists but no type is give, default to dict
+            return dict
+        else:
+            return None
 
     def __get_properties(self, object_title):
         return self.api_spec["definitions"][object_title]["properties"]
@@ -314,6 +327,21 @@ class integration_tests(unittest.TestCase):
             self.assertEqual(f"{self.osu_id}-{term}", resource_object["id"])
             self.assert_object_matches_spec(properties, attributes)
 
+    def test_not_found(self):
+        endpoints = self.api_spec["paths"]
+
+        for endpoint in endpoints:
+            resource = endpoint.split("/")[-1]
+            logging.info(resource)
+            request = self.__make_request(resource, 4, 404)
+            self.assert_error_response(
+                request,
+                "The information requested was not found. If this is incorrect, please contact application support."
+            )
+
+            # The same resource should work with a valid ID
+            self.__make_request(resource, 5, 200)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
@@ -343,11 +371,8 @@ if __name__ == '__main__':
         logging.basicConfig(level=logging.INFO)
 
     # Load configuration file
-    config_file = arguments.config_file
-    integration_tests.set_configuration_variables(config_file)
-
-    # Load openAPI yaml file
-    open_api = arguments.open_api
-    integration_tests.load_open_api_spec(open_api)
+    config_file_path = arguments.config_file
+    open_api_path = arguments.open_api
+    integration_tests.setup(config_file_path, open_api_path)
 
     unittest.main(argv=sys.argv[:1] + unittest_args)
