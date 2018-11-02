@@ -51,12 +51,19 @@ class integration_tests(unittest.TestCase):
 
         return response["access_token"]
 
-    def __make_request(self, endpoint, response_time, params=None):
+    def __make_request(self,
+                       endpoint,
+                       response_time,
+                       status_code=200,
+                       params=None):
         url = f"{self.url_with_id}/{endpoint}"
         request = requests.get(url, params=params, headers=self.auth_header)
 
         self.assert_response_time(request, response_time)
-        self.assertEqual(request.url, request.json()["links"]["self"])
+        self.assertEqual(request.status_code, status_code)
+
+        if status_code == 200:
+            self.assertEqual(request.url, request.json()["links"]["self"])
 
         return request
 
@@ -71,8 +78,19 @@ class integration_tests(unittest.TestCase):
         logging.debug("Request took {} second(s)".format(elapsed_seconds))
         self.assertLess(elapsed_seconds, max_elapsed_seconds)
 
-    def assert_id_matches(self, resource_object):
-        self.assertEqual(self.osu_id, resource_object["id"])
+    def assert_error_response(self, request, message):
+        response = request.json()
+        errors = response["errors"]
+        self.assertEqual(len(errors), 1)
+
+        properties = self.__get_properties("Error")
+        self.assert_object_matches_spec(properties, response)
+
+        error = errors[0]
+
+        self.assert_object_matches_spec(
+            properties["errors"]["items"]["properties"], error)
+        self.assertEqual(message, error["detail"])
 
     def assert_object_matches_spec(self, properties, actual):
         self.assertEqual(len(properties), len(actual))
@@ -82,6 +100,13 @@ class integration_tests(unittest.TestCase):
 
             # If the field in the response is null, skip the rest the iteration
             if actual[field] is None:
+                continue
+
+            # If the field is an object, evaluate the object
+            if "properties" in field_properties:
+                self.assertIsInstance(actual[field], object)
+                self.assert_object_matches_spec(field_properties["properties"],
+                                                actual[field])
                 continue
 
             expected_type = self.__openapi_type(field_properties)
@@ -176,14 +201,13 @@ class integration_tests(unittest.TestCase):
         request = self.__make_request("academic-status", 4)
         resource_objects = request.json()["data"]
 
+        properties = self.__get_properties_for_one_of_many(
+            "AcademicStatusResultObject")
+
         for resource_object in resource_objects:
             attributes = resource_object["attributes"]
             term = attributes["term"]
             self.assertEqual(f"{self.osu_id}-{term}", resource_object["id"])
-
-            properties = self.__get_properties_for_one_of_many(
-                "AcademicStatusResultObject")
-
             self.assert_object_matches_spec(properties, attributes)
 
             for gpa_level in attributes["gpa"]:
@@ -220,7 +244,7 @@ class integration_tests(unittest.TestCase):
             self.assert_object_matches_spec(properties, attributes)
 
     def test_class_schedule(self):
-        request = self.__make_request("class-schedule", 5,
+        request = self.__make_request("class-schedule", 5, 200,
                                       {"term": self.class_schedule_term})
         resource_objects = request.json()["data"]
 
@@ -234,6 +258,60 @@ class integration_tests(unittest.TestCase):
             properties = self.__get_properties("ClassScheduleResultObject")[
                 "data"]["items"]["properties"]["attributes"]["properties"]
 
+            self.assert_object_matches_spec(properties, attributes)
+
+    def test_class_schedule_no_term(self):
+        request = self.__make_request("class-schedule", 0.5, 400)
+        self.assert_error_response(request,
+                                   "Term (query parameter) is required.")
+
+    def test_class_schedule_bad_term(self):
+        request = self.__make_request("class-schedule", 3, 400,
+                                      {"term": "badterm"})
+        self.assert_error_response(request, "Term is invalid.")
+
+    def test_holds(self):
+        request = self.__make_request("holds", 3)
+        resource_object = request.json()["data"]
+        self.assertEqual(self.osu_id, resource_object["id"])
+
+        attributes = resource_object["attributes"]
+
+        properties = self.__get_properties_for_one_of_one("HoldsResultObject")
+
+        self.assert_object_matches_spec(properties, attributes)
+
+        for hold in attributes["holds"]:
+            self.assert_object_matches_spec(
+                properties["holds"]["items"]["properties"], hold)
+
+    def test_work_study(self):
+        request = self.__make_request("work-study", 1.5)
+        resource_object = request.json()["data"]
+        self.assertEqual(self.osu_id, resource_object["id"])
+
+        attributes = resource_object["attributes"]
+
+        properties = self.__get_properties_for_one_of_one(
+            "WorkStudyResultObject")
+
+        self.assert_object_matches_spec(properties, attributes)
+
+        for award in attributes["awards"]:
+            self.assert_object_matches_spec(
+                properties["awards"]["items"]["properties"], hold)
+
+    def test_dual_enrollment(self):
+        request = self.__make_request("dual-enrollment", 1.5)
+        resource_objects = request.json()["data"]
+
+        properties = self.__get_properties_for_one_of_many(
+            "DualEnrollmentResultObject")
+
+        for resource_object in resource_objects:
+            attributes = resource_object["attributes"]
+            term = attributes["term"]
+            self.assertEqual(f"{self.osu_id}-{term}", resource_object["id"])
             self.assert_object_matches_spec(properties, attributes)
 
 
