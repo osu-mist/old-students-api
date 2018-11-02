@@ -5,7 +5,16 @@ This directory contains files that run integration tests against the Students AP
 First, create a configuration.json file from configuration\_example.json.
 
 Use this command to run the tests:
-`python integration_tests.py -i /path/to/configuration.json`
+```shell
+python integration_tests.py \
+    -i /path/to/configuration.json \
+    -s /path/to/openapi.yaml
+```
+
+### OpenAPI
+
+These integration tests compare the API responses with the expected response
+structures documented in the [OpenAPI specification](../../../swagger.yaml).
 
 ### Docker
 
