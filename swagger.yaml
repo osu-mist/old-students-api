@@ -245,7 +245,7 @@ definitions:
             example: "account-balance"
           attributes:
             properties:
-              balance:
+              currentBalance:
                 type: number
                 format: float
                 description: Current balance of student's account, in USD.
@@ -280,7 +280,7 @@ definitions:
                       example: "Tuition Deposit Applied"
                     entryDate:
                       type: string
-                      format: date
+                      format: date-time
                       description: Date the transaction was entered.
                       example: "2018-04-27T06:31:15Z"
           links:
