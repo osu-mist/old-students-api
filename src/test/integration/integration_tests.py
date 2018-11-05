@@ -34,7 +34,7 @@ class integration_tests(unittest.TestCase):
                                             client_id, client_secret)
 
         # Set headers and query parameters
-        cls.auth_header = {'Authorization': 'Bearer {}'.format(access_token)}
+        cls.auth_header = {"Authorization": f"Bearer {access_token}"}
 
     # Helper method to get an access token
     @staticmethod
@@ -84,7 +84,7 @@ class integration_tests(unittest.TestCase):
     # Tests a API call is within the acceptable response time.
     def assert_response_time(self, request, max_elapsed_seconds):
         elapsed_seconds = request.elapsed.total_seconds()
-        logging.debug("Request took {} second(s)".format(elapsed_seconds))
+        logging.debug(f"Request took {elapsed_seconds} second(s)")
         self.assertLess(elapsed_seconds, max_elapsed_seconds)
 
     # Tests an error response and error message
