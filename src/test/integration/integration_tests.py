@@ -122,14 +122,16 @@ class integration_tests(unittest.TestCase):
             self.assertIsInstance(actual[field], expected_type)
 
             if expected_type == str and "format" in field_properties:
-                field_format = field_properties["format"]
+                type_format = field_properties["format"]
 
-                # Make sure dates as formatted correctly
-                if field_format == "date-time":
-                    self.assert_date_format(actual[field],
-                                            "%Y-%m-%dT%H:%M:%SZ")
-                elif field_format == "date":
-                    self.assert_date_format(actual[field], "%Y-%m-%d")
+                date_formats = {
+                    "date-time": "%Y-%m-%dT%H:%M:%SZ",
+                    "date": "%Y-%m-%d"
+                }
+
+                if type_format in date_formats:
+                    self.assert_date_format(
+                            actual[field], date_formats[type_format])
 
             # Make sure the returned value is in the documented list of values
             if "enum" in field_properties:
@@ -367,10 +369,8 @@ class integration_tests(unittest.TestCase):
             logging.debug(f"testing {resource} returns 404")
             request = self.__make_request(resource, 4, 404)
             self.assert_error_response(
-                request,
-                "The information requested was not found. " +
-                "If this is incorrect, please contact application support."
-            )
+                request, "The information requested was not found. " +
+                "If this is incorrect, please contact application support.")
 
             # The same resource should work with a valid ID
             self.__make_request(resource, 5, 200)
