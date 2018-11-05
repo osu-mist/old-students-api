@@ -62,16 +62,16 @@ class integration_tests(unittest.TestCase):
         else:
             url = f"{self.url_with_id}/{endpoint}"
 
-        request = requests.get(url, params=params, headers=self.auth_header)
+        res = requests.get(url, params=params, headers=self.auth_header)
 
-        self.assert_response_time(request, response_time)
-        self.assertEqual(request.status_code, status_code)
+        self.assert_response_time(res, response_time)
+        self.assertEqual(res.status_code, status_code)
 
         if status_code == 200:
             # Only test self links for successful responses.
-            self.assertEqual(request.url, request.json()["links"]["self"])
+            self.assertEqual(res.url, res.json()["links"]["self"])
 
-        return request
+        return res
 
     # Tests a date matches a desired format by attempting to parse it.
     def assert_date_format(self, date, date_format):
