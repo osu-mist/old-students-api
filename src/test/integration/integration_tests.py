@@ -122,13 +122,13 @@ class integration_tests(unittest.TestCase):
             self.assertIsInstance(actual[field], expected_type)
 
             if expected_type == str and "format" in field_properties:
-                format = field_properties["format"]
+                field_format = field_properties["format"]
 
                 # Make sure dates as formatted correctly
-                if format == "date-time":
+                if field_format == "date-time":
                     self.assert_date_format(actual[field],
                                             "%Y-%m-%dT%H:%M:%SZ")
-                elif format == "date":
+                elif field_format == "date":
                     self.assert_date_format(actual[field], "%Y-%m-%d")
 
             # Make sure the returned value is in the documented list of values
