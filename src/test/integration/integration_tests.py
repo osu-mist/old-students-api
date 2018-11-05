@@ -198,7 +198,7 @@ class integration_tests(unittest.TestCase):
             "properties"]["attributes"]["properties"]
 
     def test_account_balance(self):
-        request = self.__make_request("account-balance", 4)
+        request = self.__make_request("account-balance", 10)
         resource_object = request.json()["data"]
         self.assertEqual(self.osu_id, resource_object["id"])
 
@@ -210,7 +210,7 @@ class integration_tests(unittest.TestCase):
         self.assert_object_matches_spec(properties, attributes)
 
     def test_account_transactions(self):
-        request = self.__make_request("account-transactions", 4)
+        request = self.__make_request("account-transactions", 10)
         resource_object = request.json()["data"]
         self.assertEqual(self.osu_id, resource_object["id"])
 
@@ -226,7 +226,7 @@ class integration_tests(unittest.TestCase):
                 properties["transactions"]["items"]["properties"], transaction)
 
     def test_gpa(self):
-        request = self.__make_request("gpa", 4)
+        request = self.__make_request("gpa", 10)
         resource_object = request.json()["data"]
         self.assertEqual(self.osu_id, resource_object["id"])
 
@@ -242,7 +242,7 @@ class integration_tests(unittest.TestCase):
                 self.__get_properties("GradePointAverageObject"), level)
 
     def test_academic_status(self):
-        request = self.__make_request("academic-status", 4)
+        request = self.__make_request("academic-status", 10)
         resource_objects = request.json()["data"]
 
         properties = self.__get_properties_for_one_of_many(
@@ -260,7 +260,7 @@ class integration_tests(unittest.TestCase):
                     gpa_level)
 
     def test_classification(self):
-        request = self.__make_request("classification", 6)
+        request = self.__make_request("classification", 8)
         resource_object = request.json()["data"]
         self.assertEqual(self.osu_id, resource_object["id"])
 
@@ -272,7 +272,7 @@ class integration_tests(unittest.TestCase):
         self.assert_object_matches_spec(properties, attributes)
 
     def test_grades(self):
-        request = self.__make_request("grades", 6)
+        request = self.__make_request("grades", 12)
         resource_objects = request.json()["data"]
 
         for resource_object in resource_objects:
@@ -289,7 +289,7 @@ class integration_tests(unittest.TestCase):
             self.assert_object_matches_spec(properties, attributes)
 
     def test_class_schedule(self):
-        request = self.__make_request("class-schedule", 5, 200,
+        request = self.__make_request("class-schedule", 12, 200,
                                       {"term": self.class_schedule_term})
         resource_objects = request.json()["data"]
 
@@ -307,17 +307,17 @@ class integration_tests(unittest.TestCase):
             self.assert_object_matches_spec(properties, attributes)
 
     def test_class_schedule_no_term(self):
-        request = self.__make_request("class-schedule", 5, 400)
+        request = self.__make_request("class-schedule", 8, 400)
         self.assert_error_response(request,
                                    "Term (query parameter) is required.")
 
     def test_class_schedule_bad_term(self):
-        request = self.__make_request("class-schedule", 3, 400,
+        request = self.__make_request("class-schedule", 10, 400,
                                       {"term": "badterm"})
         self.assert_error_response(request, "Term is invalid.")
 
     def test_holds(self):
-        request = self.__make_request("holds", 3)
+        request = self.__make_request("holds", 8)
         resource_object = request.json()["data"]
         self.assertEqual(self.osu_id, resource_object["id"])
 
@@ -332,7 +332,7 @@ class integration_tests(unittest.TestCase):
                 properties["holds"]["items"]["properties"], hold)
 
     def test_work_study(self):
-        request = self.__make_request("work-study", 1.5)
+        request = self.__make_request("work-study", 5)
         resource_object = request.json()["data"]
         self.assertEqual(self.osu_id, resource_object["id"])
 
@@ -348,7 +348,7 @@ class integration_tests(unittest.TestCase):
                 properties["awards"]["items"]["properties"], hold)
 
     def test_dual_enrollment(self):
-        request = self.__make_request("dual-enrollment", 1.5)
+        request = self.__make_request("dual-enrollment", 5)
         resource_objects = request.json()["data"]
 
         properties = self.__get_properties_for_one_of_many(
@@ -367,7 +367,7 @@ class integration_tests(unittest.TestCase):
         for endpoint in endpoints:
             resource = endpoint.split("/")[-1]
             logging.debug(f"testing {resource} returns 404")
-            request = self.__make_request(resource, 4, 404)
+            request = self.__make_request(resource, 8, 404)
             self.assert_error_response(
                 request, "The information requested was not found. " +
                 "If this is incorrect, please contact application support.")
