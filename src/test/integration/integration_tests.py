@@ -6,8 +6,6 @@ import sys
 import logging
 import yaml
 from datetime import date, datetime
-from urllib import parse
-from random import randint
 
 
 class integration_tests(unittest.TestCase):
