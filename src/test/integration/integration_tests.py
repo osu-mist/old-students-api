@@ -158,8 +158,9 @@ class integration_tests(unittest.TestCase):
                 "array": list,
                 "object": dict
             }
-            plain_type = properties[
-                "format"] if "format" in properties else properties["type"]
+            plain_type = properties["format"] \
+                if "format" in properties \
+                else properties["type"]
             return openapi_types.get(plain_type, str)
 
         elif "properties" in properties:
@@ -247,7 +248,7 @@ class integration_tests(unittest.TestCase):
                     gpa_level)
 
     def test_classification(self):
-        request = self.__make_request("classification", 8)
+        request = self.__make_request("classification", 12)
         resource_object = request.json()["data"]
         self.assertEqual(self.osu_id, resource_object["id"])
 
