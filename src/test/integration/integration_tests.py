@@ -36,6 +36,8 @@ class integration_tests(unittest.TestCase):
         # Set headers and query parameters
         cls.auth_header = {"Authorization": f"Bearer {access_token}"}
 
+        cls.max_response_time = 12
+
     # Helper method to get an access token
     @staticmethod
     def get_access_token(url, client_id, client_secret):
@@ -53,7 +55,6 @@ class integration_tests(unittest.TestCase):
     # Helper method to make a web request and lightly validate the response.
     def __make_request(self,
                        endpoint,
-                       response_time,
                        status_code=200,
                        params=None):
         if status_code == 404:
@@ -64,7 +65,7 @@ class integration_tests(unittest.TestCase):
 
         res = requests.get(url, params=params, headers=self.auth_header)
 
-        self.assert_response_time(res, response_time)
+        self.assert_response_time(res, self.max_response_time)
         self.assertEqual(res.status_code, status_code)
 
         if status_code == 200:
@@ -186,7 +187,7 @@ class integration_tests(unittest.TestCase):
             "properties"]["attributes"]["properties"]
 
     def test_account_balance(self):
-        request = self.__make_request("account-balance", 10)
+        request = self.__make_request("account-balance")
         resource_object = request.json()["data"]
         self.assertEqual(self.osu_id, resource_object["id"])
 
@@ -198,7 +199,7 @@ class integration_tests(unittest.TestCase):
         self.assert_object_matches_spec(properties, attributes)
 
     def test_account_transactions(self):
-        request = self.__make_request("account-transactions", 10)
+        request = self.__make_request("account-transactions")
         resource_object = request.json()["data"]
         self.assertEqual(self.osu_id, resource_object["id"])
 
@@ -214,7 +215,7 @@ class integration_tests(unittest.TestCase):
                 properties["transactions"]["items"]["properties"], transaction)
 
     def test_gpa(self):
-        request = self.__make_request("gpa", 10)
+        request = self.__make_request("gpa")
         resource_object = request.json()["data"]
         self.assertEqual(self.osu_id, resource_object["id"])
 
@@ -230,7 +231,7 @@ class integration_tests(unittest.TestCase):
                 self.__get_properties("GradePointAverageObject"), level)
 
     def test_academic_status(self):
-        request = self.__make_request("academic-status", 10)
+        request = self.__make_request("academic-status")
         resource_objects = request.json()["data"]
 
         properties = self.__get_properties_for_one_of_many(
@@ -248,7 +249,7 @@ class integration_tests(unittest.TestCase):
                     gpa_level)
 
     def test_classification(self):
-        request = self.__make_request("classification", 12)
+        request = self.__make_request("classification")
         resource_object = request.json()["data"]
         self.assertEqual(self.osu_id, resource_object["id"])
 
@@ -260,7 +261,7 @@ class integration_tests(unittest.TestCase):
         self.assert_object_matches_spec(properties, attributes)
 
     def test_grades(self):
-        request = self.__make_request("grades", 12)
+        request = self.__make_request("grades")
         resource_objects = request.json()["data"]
 
         for resource_object in resource_objects:
@@ -277,7 +278,7 @@ class integration_tests(unittest.TestCase):
             self.assert_object_matches_spec(properties, attributes)
 
     def test_class_schedule(self):
-        request = self.__make_request("class-schedule", 12, 200,
+        request = self.__make_request("class-schedule", 200,
                                       {"term": self.class_schedule_term})
         resource_objects = request.json()["data"]
 
@@ -295,17 +296,17 @@ class integration_tests(unittest.TestCase):
             self.assert_object_matches_spec(properties, attributes)
 
     def test_class_schedule_no_term(self):
-        request = self.__make_request("class-schedule", 8, 400)
+        request = self.__make_request("class-schedule", 400)
         self.assert_error_response(request,
                                    "Term (query parameter) is required.")
 
     def test_class_schedule_bad_term(self):
-        request = self.__make_request("class-schedule", 10, 400,
+        request = self.__make_request("class-schedule", 400,
                                       {"term": "badterm"})
         self.assert_error_response(request, "Term is invalid.")
 
     def test_holds(self):
-        request = self.__make_request("holds", 8)
+        request = self.__make_request("holds")
         resource_object = request.json()["data"]
         self.assertEqual(self.osu_id, resource_object["id"])
 
@@ -320,7 +321,7 @@ class integration_tests(unittest.TestCase):
                 properties["holds"]["items"]["properties"], hold)
 
     def test_work_study(self):
-        request = self.__make_request("work-study", 5)
+        request = self.__make_request("work-study")
         resource_object = request.json()["data"]
         self.assertEqual(self.osu_id, resource_object["id"])
 
@@ -336,7 +337,7 @@ class integration_tests(unittest.TestCase):
                 properties["awards"]["items"]["properties"], hold)
 
     def test_dual_enrollment(self):
-        request = self.__make_request("dual-enrollment", 5)
+        request = self.__make_request("dual-enrollment")
         resource_objects = request.json()["data"]
 
         properties = self.__get_properties_for_one_of_many(
@@ -355,13 +356,17 @@ class integration_tests(unittest.TestCase):
         for endpoint in endpoints:
             resource = endpoint.split("/")[-1]
             logging.debug(f"testing {resource} returns 404")
-            request = self.__make_request(resource, 8, 404)
+            request = self.__make_request(resource, 404)
             self.assert_error_response(
                 request, "The information requested was not found. " +
                 "If this is incorrect, please contact application support.")
 
             # The same resource should work with a valid ID
-            self.__make_request(resource, 5, 200)
+            expected_response_code = 200
+            if resource == "class-schedule":
+                self.__make_request(resource, expected_response_code, {"term": self.class_schedule_term})
+            else:
+                self.__make_request(resource, expected_response_code)
 
 
 if __name__ == '__main__':
