@@ -269,10 +269,6 @@ class StudentsResource extends Resource {
     @GET
     @Path ('{osuID: [0-9a-zA-Z-]+}/class-schedule')
     Response getClassSchedule(@PathParam("osuID") String osuID, @QueryParam("term") String term) {
-        if (!term) {
-            return badRequest("Term (query parameter) is required.").build()
-        }
-
         List<ClassSchedule> classSchedule
 
         try {
@@ -281,6 +277,12 @@ class StudentsResource extends Resource {
             return notFound().build()
         } catch (InvalidTermException e) {
             return invalidTermResponse()
+        }
+
+        // Doing this check after attempting to get the data in case the student is not found.
+        // We only want to return a bad request if we know the student exists.
+        if (!term) {
+            return badRequest("Term (query parameter) is required.").build()
         }
 
         ResultObject resultObject = new ResultObject(

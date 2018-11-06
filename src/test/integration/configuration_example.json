@@ -1,0 +1,8 @@
+{
+    "hostname": "https://host-example.com",
+    "token_api": "https://host-example.com/oauth2/token",
+    "client_id": "secret",
+    "client_secret": "sauce",
+    "osu_id": "912345678",
+    "class_schedule_term": "201901"
+}

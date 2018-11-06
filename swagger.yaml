@@ -245,7 +245,7 @@ definitions:
             example: "account-balance"
           attributes:
             properties:
-              balance:
+              currentBalance:
                 type: number
                 format: float
                 description: Current balance of student's account, in USD.
@@ -280,7 +280,7 @@ definitions:
                       example: "Tuition Deposit Applied"
                     entryDate:
                       type: string
-                      format: date
+                      format: date-time
                       description: Date the transaction was entered.
                       example: "2018-04-27T06:31:15Z"
           links:
@@ -831,24 +831,26 @@ definitions:
       links:
         $ref: "#/definitions/SelfLink"
       data:
-        properties:
-          id:
-            $ref: "#/definitions/StudentAndTermID"
-          type:
-            type: string
-            example: "dual-enrollment"
-          attributes:
-            properties:
-              term:
-                description: The term that this course is scheduled for.
-                type: string
-                example: "201901"
-              creditHours:
-                description: The number of dual enrollment credit hours enrolled for the given term.
-                type: integer
-                example: 5
-          links:
-            $ref: "#/definitions/NullSelfLink"
+        type: array
+        items:
+          properties:
+            id:
+              $ref: "#/definitions/StudentAndTermID"
+            type:
+              type: string
+              example: "dual-enrollment"
+            attributes:
+              properties:
+                term:
+                  description: The term that this course is scheduled for.
+                  type: string
+                  example: "201901"
+                creditHours:
+                  description: The number of dual enrollment credit hours enrolled for the given term.
+                  type: integer
+                  example: 5
+            links:
+              $ref: "#/definitions/NullSelfLink"
 
   StudentID:
     type: string
