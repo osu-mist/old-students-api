@@ -19,11 +19,12 @@ structures documented in the [OpenAPI specification](../../../swagger.yaml).
 ### Docker
 
 Use these commands to build and run the tests in a container. All you need installed is Docker.
+Make sure you are in the root directory of the repository.
 
 ```shell
-$ docker build -t students-api-integration-tests .
+$ docker build -t students-api-integration-tests -f src/test/integration/Dockerfile .
 # Run the integration tests in Unix
-$ docker run -v "$PWD"/configuration.json:/usr/src/app/configuration.json:ro students-api-integration-tests
+$ docker run -v "$PWD"/src/test/integration/configuration.json:/usr/src/app/configuration.json:ro students-api-integration-tests
 # Run the integration tests in Windows
 $ docker run -v c:\path\to\configuration.json:/c:\usr\src\app\configuration.json:ro students-api-integration-tests
 ```
