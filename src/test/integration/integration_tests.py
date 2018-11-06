@@ -130,8 +130,8 @@ class integration_tests(unittest.TestCase):
                 }
 
                 if type_format in date_formats:
-                    self.assert_date_format(
-                            actual[field], date_formats[type_format])
+                    self.assert_date_format(actual[field],
+                                            date_formats[type_format])
 
             # Make sure the returned value is in the documented list of values
             if "enum" in field_properties:
@@ -146,35 +146,22 @@ class integration_tests(unittest.TestCase):
     @staticmethod
     def __openapi_type(properties):
         if "type" in properties:
-            plain_type = properties["type"]
-            logging.debug(f"OpenAPI type: {plain_type}")
+            openapi_types = {
+                "string": str,
+                "integer": int,
+                "float": float,
+                "double": float,
+                "integer": int,
+                "int32": int,
+                "int64": int,
+                "boolean": bool,
+                "array": list,
+                "object": dict
+            }
+            plain_type = properties[
+                "format"] if "format" in properties else properties["type"]
+            return openapi_types.get(plain_type, str)
 
-            if plain_type == "string":
-                return str
-            elif plain_type == "integer":
-                return int
-            elif plain_type == "number":
-                if "format" in properties:
-                    type_format = properties["format"]
-                    if type_format in ["float", "double"]:
-                        return float
-                    elif type_format in ["integer", "int32", "int64"]:
-                        return int
-                    else:
-                        # Treat int as default
-                        return int
-                else:
-                    # Treat int as default
-                    return int
-            elif plain_type == "boolean":
-                return bool
-            elif plain_type == "array":
-                return list
-            elif plain_type == "object":
-                return dict
-            else:
-                logging.warn("Unrecognized OpenAPI data type.")
-                return None
         elif "properties" in properties:
             # If a properties object exists but no type is given,
             # default to dict.
