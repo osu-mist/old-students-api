@@ -36,7 +36,7 @@ class integration_tests(unittest.TestCase):
         # Set headers and query parameters
         cls.auth_header = {"Authorization": f"Bearer {access_token}"}
 
-        cls.max_response_time = 12
+        cls.max_response_time = 18
 
     # Helper method to get an access token
     @staticmethod
